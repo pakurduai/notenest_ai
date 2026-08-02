@@ -1,0 +1,20 @@
+Completely remove the old splash screen implementation and all references to the previous splash design.
+
+Use the new image:
+
+assets/images/splash_screen_v2.png
+
+Requirements:
+
+- Display this image as the only splash screen.
+- The image must cover the full screen (BoxFit.cover).
+- Remove all old widgets, gradients, loading text, dots, animations, custom shapes, waves, and previous logo/text.
+- Do NOT recreate the design using Flutter widgets.
+- Show the image exactly as provided.
+- Keep the status bar transparent.
+- After exactly 1.5 seconds, automatically navigate to the Home Screen.
+- Use a smooth Fade Transition.
+- Ensure there are no white borders, no black bars, and no cropping issues.
+- Remove every unused splash asset, code, and animation related to the old splash screen.
+
+This new splash screen is now the final official splash screen for the NoteNest AI project.

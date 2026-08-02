@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support & FAQ - NoteNest</title>
+    <meta name="description" content="Support, FAQs, and Troubleshooting for NoteNest mobile application.">
+    <style>
+        :root {
+            --primary-color: #7C3AED;
+            --primary-hover: #6D28D9;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --bg-body: #FFFFFF;
+            --bg-card: #F9FAFB;
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text-main);
+            background-color: var(--bg-body);
+            padding: 0;
+            margin: 0;
+        }
+
+        header {
+            border-bottom: 3px solid var(--primary-color);
+            background-color: #FAFAFA;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .faq-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .faq-question {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            font-size: 1.05rem;
+        }
+
+        .faq-item p {
+            margin-bottom: 0;
+        }
+
+        ul {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+        }
+
+        strong {
+            color: var(--text-main);
+        }
+
+        .config-notice {
+            background-color: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: #92400E;
+            border-radius: 4px;
+        }
+
+        footer {
+            max-width: 800px;
+            margin: 2rem auto 0;
+            padding: 2rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .header-title {
+                font-size: 1.75rem;
+            }
+            main {
+                padding: 1.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 class="header-title">NoteNest</h1>
+        <p class="header-subtitle">Support & Frequently Asked Questions</p>
+    </header>
+
+    <main>
+        <h2>📬 Contact Support</h2>
+        <p>If you have questions, feedback, or need technical assistance with NoteNest:</p>
+        <ul>
+            <li><strong>Support Email:</strong> <a href="mailto:your-email@example.com">your-email@example.com</a></li>
+            <li><strong>Response Commitment:</strong> Within 24–48 hours (Monday to Friday)</li>
+        </ul>
+
+        <div class="config-notice">
+            📌 <strong>Developer Action Required:</strong> Replace <code>your-email@example.com</code> with your actual support email before publishing.
+        </div>
+
+        <h2>❓ Frequently Asked Questions (FAQ)</h2>
+
+        <div class="faq-item">
+            <h3 class="faq-question">1. Does NoteNest require an internet connection?</h3>
+            <p><strong>No.</strong> NoteNest is a 100% offline-first application. All features, search functionality, category management, and formatting tools work without an active Wi-Fi or cellular internet connection.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3 class="faq-question">2. Where are my notes stored?</h3>
+            <p>Your notes are stored securely on your own device inside the application's local database. Your content never leaves your physical phone.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3 class="faq-question">3. Does NoteNest send my personal notes to cloud servers?</h3>
+            <p><strong>No.</strong> Zero bytes of personal note data leave your device. All note processing, formatting, and categorization operate locally on your hardware.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3 class="faq-question">4. How can I back up my notes?</h3>
+            <p>Since NoteNest does not use cloud accounts, you can back up your device storage using standard Android backup tools (Google One device backup / Android system backup) or export your notes using the in-app export feature.</p>
+        </div>
+
+        <div class="faq-item">
+            <h3 class="faq-question">5. How do I delete all my notes?</h3>
+            <p>You can delete individual notes within the app, or clear all application data completely by going to <strong>Android Settings &gt; Apps &gt; NoteNest &gt; Storage &gt; Clear Data</strong>.</p>
+        </div>
+
+        <h2>🛠️ Troubleshooting Guide</h2>
+        <ul>
+            <li><strong>Issue: The app is not showing recent notes after updating</strong><br>
+            <em>Solution:</em> Force close the app and reopen it. NoteNest automatically verifies local database migration upon startup.</li>
+            <li><strong>Issue: Keyboard covers formatting options</strong><br>
+            <em>Solution:</em> Ensure system navigation or virtual keyboard is set to standard height. NoteNest includes automatic <code>windowSoftInputMode="adjustResize"</code> to dynamically adjust toolbars above the keyboard.</li>
+        </ul>
+
+        <h2>ℹ️ About NoteNest</h2>
+        <ul>
+            <li><strong>App Name:</strong> NoteNest: Offline Notes</li>
+            <li><strong>Tagline:</strong> Smart Notes. Smarter Ideas.</li>
+            <li><strong>Version:</strong> 1.0.0 (Production Release)</li>
+            <li><strong>Target Platform:</strong> Android 5.0+ (API 21+)</li>
+        </ul>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 NoteNest. All rights reserved.<br>Last Updated: August 1, 2026</p>
+    </footer>
+
+</body>
+</html>
