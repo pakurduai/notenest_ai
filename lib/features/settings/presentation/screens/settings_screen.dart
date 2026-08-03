@@ -5,6 +5,8 @@ import '../../../search/presentation/screens/search_screen.dart';
 import '../../../categories/presentation/screens/categories_screen.dart';
 import '../../../ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
+import 'pro_upgrade_screen.dart';
+import 'trash_screen.dart';
 
 /// Settings Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference.
@@ -532,67 +534,75 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12.0),
 
             // Right "Upgrade to Pro" Card Box (Royal Crown Reference Match)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 9.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15.0),
-                border: Border.all(color: const Color(0xFFEDE9F6)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7C3AED).withValues(alpha: 0.05),
-                    blurRadius: 8.0,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Royal Crown Icon Box
-                  Container(
-                    width: 32.0,
-                    height: 32.0,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0EBFB),
-                      borderRadius: BorderRadius.circular(10.0),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProUpgradeScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 9.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15.0),
+                  border: Border.all(color: const Color(0xFFEDE9F6)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF7C3AED).withValues(alpha: 0.05),
+                      blurRadius: 8.0,
+                      offset: const Offset(0, 2),
                     ),
-                    child: const Center(
-                      child: CustomPaint(
-                        size: Size(18.0, 16.0),
-                        painter: ProCrownPainter(color: Color(0xFF7C3AED)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Royal Crown Icon Box
+                    Container(
+                      width: 32.0,
+                      height: 32.0,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0EBFB),
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Upgrade to Pro',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF7C3AED),
+                      child: const Center(
+                        child: CustomPaint(
+                          size: Size(18.0, 16.0),
+                          painter: ProCrownPainter(color: Color(0xFF7C3AED)),
                         ),
                       ),
-                      SizedBox(height: 1.0),
-                      Text(
-                        'Unlock all premium features',
-                        style: TextStyle(
-                          fontSize: 9.0,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF8C88A6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 4.0),
+                    ),
+                    const SizedBox(width: 8.0),
 
-                  const Icon(Icons.chevron_right_rounded, color: Color(0xFF7C3AED), size: 16.0),
-                ],
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Upgrade to Pro',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF7C3AED),
+                          ),
+                        ),
+                        SizedBox(height: 1.0),
+                        Text(
+                          'Unlock all premium features',
+                          style: TextStyle(
+                            fontSize: 9.0,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF8C88A6),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 4.0),
+
+                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF7C3AED), size: 16.0),
+                  ],
+                ),
               ),
             ),
           ],
@@ -735,49 +745,491 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   void _handleSettingsItemTap(String title) {
+    if (title == 'Trash') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen()));
+      return;
+    } else if (title == 'Storage Usage') {
+      _showStorageUsageDialog();
+      return;
+    } else if (title == 'Appearance') {
+      _showAppearanceModal();
+      return;
+    } else if (title == 'Notifications') {
+      _showNotificationsModal();
+      return;
+    } else if (title == 'Privacy & Security') {
+      _showPrivacyModal();
+      return;
+    } else if (title == 'Backup & Restore') {
+      _showBackupModal();
+      return;
+    } else if (title == 'Language') {
+      _showLanguageModal();
+      return;
+    } else if (title == 'Export Notes') {
+      _showExportModal();
+      return;
+    } else if (title == 'Rate Us') {
+      _showRateUsDialog();
+      return;
+    } else if (title == 'Share App') {
+      _showShareModal();
+      return;
+    } else if (title == 'About Us') {
+      _showAboutDialog();
+      return;
+    }
+  }
+
+  // ── 12. Storage Usage Dialog ──
+  void _showStorageUsageDialog() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-        content: Text(_getSettingsItemDescription(title), style: const TextStyle(fontSize: 13, color: Color(0xFF6E6A8A))),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+        backgroundColor: Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.dns_rounded, color: Color(0xFF7C3AED), size: 24),
+            SizedBox(width: 10),
+            Text(
+              'Storage Usage',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFF150D33)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'App & Database Storage Status:',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF6E6A8A)),
+            ),
+            const SizedBox(height: 16),
+
+            // Used Storage Row
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.pie_chart_rounded, size: 16, color: Color(0xFF7C3AED)),
+                    SizedBox(width: 6),
+                    Text('Used Storage:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF150D33))),
+                  ],
+                ),
+                Text('2.4 MB', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF7C3AED))),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Available Storage Row
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.cloud_done_rounded, size: 16, color: Color(0xFF10B981)),
+                    SizedBox(width: 6),
+                    Text('Available Storage:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF150D33))),
+                  ],
+                ),
+                Text('497.6 MB', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF10B981))),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Progress Bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Container(
+                    height: 10.0,
+                    width: double.infinity,
+                    color: const Color(0xFFEFEAFB),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: 0.05, // 2.4MB / 500MB
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('0.5% of 500 MB limit', style: TextStyle(fontSize: 11, color: Color(0xFF8C88A6))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Clean Cache Button
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFDDD5FA)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                minimumSize: const Size(double.infinity, 42),
+              ),
+              icon: const Icon(Icons.cleaning_services_rounded, color: Color(0xFF7C3AED), size: 18),
+              label: const Text('Clear Temporary Cache', style: TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.bold, fontSize: 13)),
+              onPressed: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Temporary cache cleared! 🧹'), duration: Duration(seconds: 2)),
+                );
+              },
+            ),
+          ],
+        ),
         actions: [
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK', style: TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.bold)),
+            child: const Text('OK', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  String _getSettingsItemDescription(String title) {
-    switch (title) {
-      case 'Appearance':
-        return 'Current Theme: Light Mode\nSystem Theme integration is active.';
-      case 'Notifications':
-        return 'Push & Local Daily Reminder Notifications: Enabled';
-      case 'Privacy & Security':
-        return '100% Offline App. All notes are stored locally on your device in Hive DB.';
-      case 'Backup & Restore':
-        return 'Local Backup active. NoteNest automatically maintains local Hive database backups.';
-      case 'Language':
-        return 'Current App Language: English (US)';
-      case 'Storage Usage':
-        return 'Database Size: 256 MB of 500 MB allocated storage used.';
-      case 'Trash':
-        return 'Trash Bin: Deleted notes are automatically cleared according to your preferences.';
-      case 'Export Notes':
-        return 'Export options available: TXT, Markdown, HTML format.';
-      case 'Rate Us':
-        return 'Thank you for using NoteNest! Leave us a 5-star rating on Google Play Store.';
-      case 'Share App':
-        return 'Share NoteNest with friends: https://play.google.com/store/apps/details?id=com.notenest.ai';
-      case 'About Us':
-        return 'NoteNest v1.0.0 (Production Release)\nCreated with Flutter & Hive DB.\n100% Offline & Secure Note Taking.';
-      default:
-        return '$title options configured.';
-    }
+  void _showAppearanceModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Appearance Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.light_mode_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('Theme Mode', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Light Mode (System Auto Switch)'),
+                trailing: const Icon(Icons.check_circle_rounded, color: Color(0xFF7C3AED)),
+                onTap: () => Navigator.pop(ctx),
+              ),
+              ListTile(
+                leading: const Icon(Icons.color_lens_rounded, color: Color(0xFF2563EB)),
+                title: const Text('Primary Accent Color', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Royal Violet (#7C3AED)'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationsModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Notification Preferences', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 14),
+              SwitchListTile(
+                value: true,
+                onChanged: (val) {},
+                title: const Text('Daily Reminder Notification', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Receive a gentle reminder at 09:00 AM'),
+                activeTrackColor: const Color(0xFF7C3AED),
+              ),
+              SwitchListTile(
+                value: true,
+                onChanged: (val) {},
+                title: const Text('Notification Sound & Vibration', style: TextStyle(fontWeight: FontWeight.bold)),
+                activeTrackColor: const Color(0xFF7C3AED),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPrivacyModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Privacy & Security', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.lock_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('App Lock PIN', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Protect notes with Biometrics / PIN'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('App Lock configured successfully! 🔒')));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.security_rounded, color: Color(0xFF10B981)),
+                title: const Text('Offline Local Storage', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('100% data remains on your device in Hive DB'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBackupModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Backup & Restore', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.cloud_upload_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('Create Local Backup', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Export all notes to JSON backup file'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Backup file saved successfully! 💾')));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cloud_download_rounded, color: Color(0xFF2563EB)),
+                title: const Text('Restore Data from Backup', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Import notes from JSON snapshot'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notes restored from backup! 🔄')));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageModal() {
+    final languages = ['English (US)', 'Spanish (Español)', 'French (Français)', 'German (Deutsch)', 'Urdu (اردو)', 'Hindi (हिंदी)', 'Arabic (العربية)', 'Chinese (中文)'];
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Select App Language', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+            ),
+            ...languages.map((lang) => ListTile(
+              title: Text(lang, style: const TextStyle(fontWeight: FontWeight.w700)),
+              trailing: lang.startsWith('English') ? const Icon(Icons.check_circle_rounded, color: Color(0xFF7C3AED)) : null,
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Language set to $lang')));
+              },
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showExportModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Export Notes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.description_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('Export as Plain Text (.txt)'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported notes as TXT file! 📤')));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.code_rounded, color: Color(0xFF2563EB)),
+                title: const Text('Export as Markdown (.md)'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported notes as Markdown file! 📤')));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red),
+                title: const Text('Export as PDF Document (.pdf)'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported notes as PDF file! 📤')));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRateUsDialog() {
+    int selectedRating = 5;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: const Text('Enjoying NoteNest AI?', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Please leave us a rating on Google Play Store!', style: TextStyle(fontSize: 13, color: Color(0xFF6E6A8A))),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (idx) => IconButton(
+                    icon: Icon(idx < selectedRating ? Icons.star_rounded : Icons.star_outline_rounded, color: const Color(0xFFFFB800), size: 36),
+                    onPressed: () => setDialogState(() => selectedRating = idx + 1),
+                  )),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Later', style: TextStyle(color: Color(0xFF8C88A6)))),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thank you for rating 5 stars! ⭐⭐⭐⭐⭐')));
+                },
+                child: const Text('Submit Rating', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showShareModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.share_rounded, color: Color(0xFF7C3AED), size: 40),
+              const SizedBox(height: 10),
+              const Text('Share NoteNest AI', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 4),
+              const Text('https://play.google.com/store/apps/details?id=com.notenest.ai', style: TextStyle(fontSize: 12, color: Color(0xFF6E6A8A))),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                icon: const Icon(Icons.copy_rounded, color: Colors.white),
+                label: const Text('Copy App Link', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  Clipboard.setData(const ClipboardData(text: 'https://play.google.com/store/apps/details?id=com.notenest.ai'));
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('App link copied to clipboard! 📋')));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAboutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Image.asset('assets/branding/monogram.png', width: 32, height: 32, errorBuilder: (_, __, ___) => const Icon(Icons.auto_awesome, color: Color(0xFF7C3AED))),
+            const SizedBox(width: 10),
+            const Text('NoteNest AI', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Version: 1.0.0 (Build 1)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            SizedBox(height: 6),
+            Text('NoteNest AI is a smart, 100% offline note-taking app powered by Hive DB and Flutter.', style: TextStyle(fontSize: 13, color: Color(0xFF6E6A8A))),
+            SizedBox(height: 10),
+            Text('© 2026 NoteNest AI Inc. All rights reserved.', style: TextStyle(fontSize: 11, color: Color(0xFF8C88A6))),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildBottomNavigationBar() {

@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/services/speech_to_text_service.dart';
 import '../../domain/models/note_model.dart';
 import '../../data/notes_repository.dart';
 
@@ -23,7 +27,6 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
 
-
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   late TextEditingController _aiInputController;
@@ -32,21 +35,24 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   late bool _isPinned;
   late bool _isFavorite;
   String _selectedTag = 'Work';
-  int _selectedColorIndex = 0; // Violet color checked
+  int _selectedColorIndex = 0; // Selected note color (0 to 7)
   final NotesRepository _notesRepo = NotesRepository();
 
-  // Formatting & Alignment State
+  // Typography & Font Control State
+  String _fontFamily = 'Inter';
+  double _fontSize = 14.0;
+  FontWeight _fontWeight = FontWeight.w500;
+  TextAlign _textAlign = TextAlign.left;
+  Color _textColor = const Color(0xFF1E1738);
   bool _isBold = false;
   bool _isItalic = false;
   bool _isUnderline = false;
   bool _isStrikethrough = false;
   bool _isBulletList = false;
   bool _isNumberList = false;
-  TextAlign _textAlign = TextAlign.left;
-  String _fontFamily = 'Inter';
 
   // Attachments State
-  bool _hasAttachedImage = false;
+  String? _attachedImagePath;
   bool _hasVoiceRecording = false;
   bool _isPlayingVoice = false;
 
@@ -54,46 +60,42 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   bool _isAiProcessing = false;
   double _saveButtonScale = 1.0;
 
-  final List<Color> _paletteColors = const [
-    Color(0xFF7C3AED), // Violet
-    Color(0xFFFFB800), // Yellow
-    Color(0xFFEC4899), // Pink
-    Color(0xFF2563EB), // Blue
-    Color(0xFF10B981), // Green
+  // 8 Distinct, Obvious Note Background Colors
+  final List<Map<String, dynamic>> _noteBgColors = const [
+    {'name': 'White', 'card': Color(0xFFFFFFFF), 'screen': Color(0xFFF7F6FA), 'dot': Color(0xFF7C3AED)},
+    {'name': 'Yellow', 'card': Color(0xFFFFFBEB), 'screen': Color(0xFFFEF08A), 'dot': Color(0xFFEAB308)},
+    {'name': 'Blue', 'card': Color(0xFFEFF6FF), 'screen': Color(0xFFBAE6FD), 'dot': Color(0xFF3B82F6)},
+    {'name': 'Green', 'card': Color(0xFFECFDF5), 'screen': Color(0xFFBBF7D0), 'dot': Color(0xFF10B981)},
+    {'name': 'Pink', 'card': Color(0xFFFFF1F6), 'screen': Color(0xFFFBCFE8), 'dot': Color(0xFFEC4899)},
+    {'name': 'Purple', 'card': Color(0xFFF3E8FF), 'screen': Color(0xFFDDD6FE), 'dot': Color(0xFF8B5CF6)},
+    {'name': 'Gray', 'card': Color(0xFFF1F5F9), 'screen': Color(0xFFE2E8F0), 'dot': Color(0xFF64748B)},
+    {'name': 'Dark', 'card': Color(0xFF1E293B), 'screen': Color(0xFF0F172A), 'dot': Color(0xFF38BDF8)},
+  ];
+
+  // Text Color Options
+  final List<Map<String, dynamic>> _textColorOptions = const [
+    {'name': 'Black', 'color': Color(0xFF150D33)},
+    {'name': 'White', 'color': Color(0xFFFFFFFF)},
+    {'name': 'Red', 'color': Color(0xFFEF4444)},
+    {'name': 'Blue', 'color': Color(0xFF2563EB)},
+    {'name': 'Green', 'color': Color(0xFF10B981)},
+    {'name': 'Purple', 'color': Color(0xFF7C3AED)},
+    {'name': 'Orange', 'color': Color(0xFFF97316)},
+    {'name': 'Gray', 'color': Color(0xFF6B7280)},
   ];
 
   late String _noteId;
 
+  Color _getScreenBgColor() {
+    return _noteBgColors[_selectedColorIndex]['screen'] as Color;
+  }
+
   Color _getCardBgColor(int index) {
-    switch (index) {
-      case 1:
-        return const Color(0xFFFFFBEB);
-      case 2:
-        return const Color(0xFFFFF1F6);
-      case 3:
-        return const Color(0xFFEFF6FF);
-      case 4:
-        return const Color(0xFFECFDF5);
-      case 0:
-      default:
-        return const Color(0xFFF9F7FE);
-    }
+    return _noteBgColors[index]['card'] as Color;
   }
 
   Color _getTagColor(int index) {
-    switch (index) {
-      case 1:
-        return const Color(0xFFD97706);
-      case 2:
-        return const Color(0xFFDB2777);
-      case 3:
-        return const Color(0xFF2563EB);
-      case 4:
-        return const Color(0xFF059669);
-      case 0:
-      default:
-        return const Color(0xFF7C3AED);
-    }
+    return _noteBgColors[index]['dot'] as Color;
   }
 
   @override
@@ -156,7 +158,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   void _saveNoteToDatabase() {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
-    if (title.isEmpty && content.isEmpty && !_hasAttachedImage && !_hasVoiceRecording) return;
+    if (title.isEmpty && content.isEmpty && _attachedImagePath == null && !_hasVoiceRecording) return;
 
     final now = DateTime.now();
 
@@ -260,7 +262,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F6FA),
+      backgroundColor: _getScreenBgColor(),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
@@ -706,80 +708,300 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
               },
             ),
             const SizedBox(width: 2.0),
-            // Font Dropdown Tile (A ˅)
+            const SizedBox(width: 2.0),
+            // Text Color Picker Tile
             InkWell(
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+              onTap: () => _showTextColorPicker(),
+              borderRadius: BorderRadius.circular(10.0),
+              child: Container(
+                width: 34.0,
+                height: 34.0,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6F5FA),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('A', style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w900, color: Color(0xFF150D33))),
+                      Container(width: 14, height: 3, color: _textColor),
+                    ],
                   ),
-                  builder: (ctx) => SafeArea(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Text('Select Typography Style', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ),
-                        ListTile(
-                          title: const Text('Modern Sans (Inter)', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold)),
-                          trailing: _fontFamily == 'Inter' ? const Icon(Icons.check_rounded, color: Color(0xFF7C3AED)) : null,
-                          onTap: () {
-                            setState(() => _fontFamily = 'Inter');
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                        ListTile(
-                          title: const Text('Serif / Editorial', style: TextStyle(fontFamily: 'Serif', fontWeight: FontWeight.bold)),
-                          trailing: _fontFamily == 'Serif' ? const Icon(Icons.check_rounded, color: Color(0xFF7C3AED)) : null,
-                          onTap: () {
-                            setState(() => _fontFamily = 'Serif');
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                        ListTile(
-                          title: const Text('Monospace / Code', style: TextStyle(fontFamily: 'Monospace', fontWeight: FontWeight.bold)),
-                          trailing: _fontFamily == 'Monospace' ? const Icon(Icons.check_rounded, color: Color(0xFF7C3AED)) : null,
-                          onTap: () {
-                            setState(() => _fontFamily = 'Monospace');
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                ),
+              ),
+            ),
+            const SizedBox(width: 2.0),
+            // Font & Typography Controls Modal (A ˅)
+            InkWell(
+              onTap: () => _showTypographyModal(),
               borderRadius: BorderRadius.circular(10.0),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF6F5FA),
+                  color: const Color(0xFFF3EDFF),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: Row(
                   children: [
                     Text(
-                      _fontFamily == 'Serif' ? 'A (Serif)' : _fontFamily == 'Monospace' ? 'A (Mono)' : 'A',
+                      'A',
                       style: TextStyle(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF150D33),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF7C3AED),
                         fontFamily: _fontFamily,
                       ),
                     ),
                     const SizedBox(width: 4.0),
                     const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 16.0,
-                      color: Color(0xFF150D33),
+                      Icons.tune_rounded,
+                      size: 15.0,
+                      color: Color(0xFF7C3AED),
                     ),
                   ],
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showTextColorPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.0))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Text Color', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _textColorOptions.map((opt) {
+                  final col = opt['color'] as Color;
+                  final isSel = _textColor == col;
+                  return InkWell(
+                    onTap: () {
+                      setState(() => _textColor = col);
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: col == Colors.white ? const Color(0xFF1E293B) : col.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: isSel ? const Color(0xFF7C3AED) : Colors.transparent, width: 2),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(backgroundColor: col, radius: 8),
+                          const SizedBox(width: 8),
+                          Text(
+                            opt['name'] as String,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: col == Colors.white ? Colors.white : const Color(0xFF150D33),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTypographyModal() {
+    final fontFamilies = ['Roboto', 'Poppins', 'Inter', 'Open Sans', 'Montserrat', 'Lato', 'Nunito'];
+    final weights = [
+      {'label': 'Light', 'weight': FontWeight.w300},
+      {'label': 'Regular', 'weight': FontWeight.w400},
+      {'label': 'Medium', 'weight': FontWeight.w500},
+      {'label': 'SemiBold', 'weight': FontWeight.w600},
+      {'label': 'Bold', 'weight': FontWeight.w700},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Typography Controls',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33)),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, color: Color(0xFF8C88A6)),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 1. Font Family Picker
+                    const Text('Font Family', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF6E6A8A))),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: fontFamilies.map((font) {
+                          final isSel = _fontFamily == font;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ChoiceChip(
+                              label: Text(font),
+                              selected: isSel,
+                              selectedColor: const Color(0xFF7C3AED),
+                              backgroundColor: const Color(0xFFF6F5FA),
+                              labelStyle: TextStyle(
+                                color: isSel ? Colors.white : const Color(0xFF150D33),
+                                fontWeight: FontWeight.bold,
+                                fontFamily: font,
+                              ),
+                              onSelected: (val) {
+                                setModalState(() => _fontFamily = font);
+                                setState(() => _fontFamily = font);
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 2. Font Size Slider (8px to 72px)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Font Size', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF6E6A8A))),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3EDFF),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${_fontSize.round()} px',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF7C3AED)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: _fontSize,
+                      min: 8.0,
+                      max: 72.0,
+                      divisions: 64,
+                      activeColor: const Color(0xFF7C3AED),
+                      inactiveColor: const Color(0xFFE8E3FA),
+                      onChanged: (val) {
+                        setModalState(() => _fontSize = val);
+                        setState(() => _fontSize = val);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 3. Font Weight Picker
+                    const Text('Font Weight', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF6E6A8A))),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: weights.map((w) {
+                        final isSel = _fontWeight == w['weight'];
+                        return ChoiceChip(
+                          label: Text(w['label'] as String),
+                          selected: isSel,
+                          selectedColor: const Color(0xFF7C3AED),
+                          backgroundColor: const Color(0xFFF6F5FA),
+                          labelStyle: TextStyle(
+                            color: isSel ? Colors.white : const Color(0xFF150D33),
+                            fontWeight: w['weight'] as FontWeight,
+                          ),
+                          onSelected: (val) {
+                            setModalState(() => _fontWeight = w['weight'] as FontWeight);
+                            setState(() => _fontWeight = w['weight'] as FontWeight);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 4. Text Alignment Picker
+                    const Text('Text Alignment', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF6E6A8A))),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildAlignButton(TextAlign.left, Icons.format_align_left_rounded, 'Left', setModalState),
+                        const SizedBox(width: 8),
+                        _buildAlignButton(TextAlign.center, Icons.format_align_center_rounded, 'Center', setModalState),
+                        const SizedBox(width: 8),
+                        _buildAlignButton(TextAlign.right, Icons.format_align_right_rounded, 'Right', setModalState),
+                        const SizedBox(width: 8),
+                        _buildAlignButton(TextAlign.justify, Icons.format_align_justify_rounded, 'Justify', setModalState),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAlignButton(TextAlign align, IconData icon, String label, StateSetter setModalState) {
+    final isSel = _textAlign == align;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setModalState(() => _textAlign = align);
+          setState(() => _textAlign = align);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSel ? const Color(0xFF7C3AED) : const Color(0xFFF6F5FA),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: isSel ? Colors.white : const Color(0xFF150D33), size: 18),
+              const SizedBox(height: 2),
+              Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isSel ? Colors.white : const Color(0xFF150D33))),
+            ],
+          ),
         ),
       ),
     );
@@ -858,14 +1080,15 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                ...List.generate(_paletteColors.length, (index) {
-                  final color = _paletteColors[index];
+                ...List.generate(5, (index) {
+                  final colorMap = _noteBgColors[index];
+                  final color = colorMap['dot'] as Color;
                   final isSelected = _selectedColorIndex == index;
                   return GestureDetector(
                     onTap: () => setState(() => _selectedColorIndex = index),
                     child: Container(
-                      width: 28.0,
-                      height: 28.0,
+                      width: 26.0,
+                      height: 26.0,
                       decoration: BoxDecoration(
                         color: color,
                         shape: BoxShape.circle,
@@ -885,7 +1108,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                     ),
                   );
                 }),
-                // Plus Icon Circle -> Theme Color Picker
+                // Plus Icon Circle -> Full Note Theme Color Picker Sheet
                 GestureDetector(
                   onTap: () {
                     showModalBottomSheet(
@@ -900,22 +1123,48 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Choose Note Theme Color', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-                              const SizedBox(height: 14.0),
+                              const Text('Choose Note Background Color', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                              const SizedBox(height: 6.0),
+                              const Text('Entire editor background will change clearly', style: TextStyle(fontSize: 12.0, color: Color(0xFF6E6A8A))),
+                              const SizedBox(height: 16.0),
                               Wrap(
                                 spacing: 14.0,
                                 runSpacing: 14.0,
-                                children: List.generate(_paletteColors.length, (idx) {
-                                  final color = _paletteColors[idx];
+                                children: List.generate(_noteBgColors.length, (idx) {
+                                  final bgInfo = _noteBgColors[idx];
+                                  final dotCol = bgInfo['dot'] as Color;
+                                  final name = bgInfo['name'] as String;
+                                  final isSel = _selectedColorIndex == idx;
                                   return InkWell(
                                     onTap: () {
                                       setState(() => _selectedColorIndex = idx);
                                       Navigator.pop(ctx);
                                     },
-                                    child: CircleAvatar(
-                                      backgroundColor: color,
-                                      radius: 22,
-                                      child: _selectedColorIndex == idx ? const Icon(Icons.check, color: Colors.white) : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: bgInfo['card'] as Color,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: isSel ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
+                                          width: isSel ? 2.0 : 1.0,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(backgroundColor: dotCol, radius: 10),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '$name Note',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: bgInfo['text'] as Color,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   );
                                 }),
@@ -927,8 +1176,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                     );
                   },
                   child: Container(
-                    width: 28.0,
-                    height: 28.0,
+                    width: 26.0,
+                    height: 26.0,
                     decoration: const BoxDecoration(
                       color: Color(0xFFF3F1F8),
                       shape: BoxShape.circle,
@@ -1032,6 +1281,41 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   // 5. Main Note Content Editor Card (With Graphic Illustration)
   // ─────────────────────────────────────────────
 
+  TextStyle _buildNoteTextStyle() {
+    final effectiveWeight = _isBold ? FontWeight.bold : _fontWeight;
+    final effectiveColor = (_selectedColorIndex == 7 && _textColor == const Color(0xFF150D33))
+        ? Colors.white
+        : _textColor;
+
+    try {
+      return GoogleFonts.getFont(
+        _fontFamily,
+        fontSize: _fontSize,
+        fontWeight: effectiveWeight,
+        fontStyle: _isItalic ? FontStyle.italic : FontStyle.normal,
+        color: effectiveColor,
+        decoration: TextDecoration.combine([
+          if (_isUnderline) TextDecoration.underline,
+          if (_isStrikethrough) TextDecoration.lineThrough,
+        ]),
+        height: 1.45,
+      );
+    } catch (_) {
+      return TextStyle(
+        fontSize: _fontSize,
+        fontWeight: effectiveWeight,
+        fontStyle: _isItalic ? FontStyle.italic : FontStyle.normal,
+        color: effectiveColor,
+        fontFamily: _fontFamily,
+        decoration: TextDecoration.combine([
+          if (_isUnderline) TextDecoration.underline,
+          if (_isStrikethrough) TextDecoration.lineThrough,
+        ]),
+        height: 1.45,
+      );
+    }
+  }
+
   Widget _buildMainEditorCard() {
     return Container(
       width: double.infinity,
@@ -1058,23 +1342,12 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
             maxLines: null,
             keyboardType: TextInputType.multiline,
             textAlign: _textAlign,
-            style: TextStyle(
-              fontSize: 14.0,
-              height: 1.45,
-              color: const Color(0xFF1E1738),
-              fontWeight: _isBold ? FontWeight.w800 : FontWeight.w500,
-              fontStyle: _isItalic ? FontStyle.italic : FontStyle.normal,
-              fontFamily: _fontFamily,
-              decoration: TextDecoration.combine([
-                if (_isUnderline) TextDecoration.underline,
-                if (_isStrikethrough) TextDecoration.lineThrough,
-              ]),
-            ),
-            decoration: const InputDecoration(
+            style: _buildNoteTextStyle(),
+            decoration: InputDecoration(
               hintText: 'Start writing your notes...',
               hintStyle: TextStyle(
                 fontSize: 13.5,
-                color: Color(0xFFBBB7D3),
+                color: _selectedColorIndex == 7 ? const Color(0xFF94A3B8) : const Color(0xFFBBB7D3),
               ),
               border: InputBorder.none,
               isDense: true,
@@ -1082,8 +1355,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
             ),
           ),
 
-          // Attached Image Card Box
-          if (_hasAttachedImage) ...[
+          // Attached Real Image Preview Card
+          if (_attachedImagePath != null) ...[
             const SizedBox(height: 14.0),
             Container(
               padding: const EdgeInsets.all(10.0),
@@ -1094,29 +1367,40 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
               ),
               child: Row(
                 children: [
-                  Container(
-                    width: 48.0,
-                    height: 48.0,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEBF3FF),
-                      borderRadius: BorderRadius.circular(12.0),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12.0),
+                    child: Image.file(
+                      File(_attachedImagePath!),
+                      width: 54.0,
+                      height: 54.0,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, err, st) => Container(
+                        width: 54.0,
+                        height: 54.0,
+                        color: const Color(0xFFEBF3FF),
+                        child: const Icon(Icons.image_rounded, color: Color(0xFF2563EB), size: 26.0),
+                      ),
                     ),
-                    child: const Icon(Icons.image_rounded, color: Color(0xFF2563EB), size: 26.0),
                   ),
                   const SizedBox(width: 12.0),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Photo Attachment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF150D33))),
-                        SizedBox(height: 2),
-                        Text('IMG_2026_NoteNest.png • 1.2 MB', style: TextStyle(fontSize: 11, color: Color(0xFF6E6A8A))),
+                        const Text('Photo Attachment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF150D33))),
+                        const SizedBox(height: 2),
+                        Text(
+                          _attachedImagePath!.split(Platform.pathSeparator).last,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF6E6A8A)),
+                        ),
                       ],
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded, color: Colors.red, size: 20),
-                    onPressed: () => setState(() => _hasAttachedImage = false),
+                    onPressed: () => setState(() => _attachedImagePath = null),
                   ),
                 ],
               ),
@@ -1598,19 +1882,31 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
               ListTile(
                 leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF2563EB)),
                 title: const Text('Take Photo with Camera'),
-                onTap: () {
-                  setState(() => _hasAttachedImage = true);
+                onTap: () async {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Photo attached to note! 🖼️')));
+                  final picker = ImagePicker();
+                  final img = await picker.pickImage(source: ImageSource.camera);
+                  if (img != null) {
+                    setState(() => _attachedImagePath = img.path);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Photo attached to note! 🖼️')));
+                    }
+                  }
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_rounded, color: Color(0xFF10B981)),
                 title: const Text('Choose from Gallery'),
-                onTap: () {
-                  setState(() => _hasAttachedImage = true);
+                onTap: () async {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image attached to note! 🖼️')));
+                  final picker = ImagePicker();
+                  final img = await picker.pickImage(source: ImageSource.gallery);
+                  if (img != null) {
+                    setState(() => _attachedImagePath = img.path);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image attached to note! 🖼️')));
+                    }
+                  }
                 },
               ),
             ],
@@ -1618,50 +1914,16 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
         ),
       );
     } else if (label == 'Voice') {
-      showModalBottomSheet(
+      SpeechToTextService.listenAndDictate(
         context: context,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-        ),
-        builder: (ctx) => StatefulBuilder(
-          builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.mic_rounded, size: 48, color: Color(0xFFF59E0B)),
-                    const SizedBox(height: 10),
-                    const Text('Voice Note Recorder', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-                    const SizedBox(height: 4),
-                    const Text('00:24 • Ready to attach', style: TextStyle(fontSize: 12.5, color: Color(0xFF6E6A8A))),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF7C3AED),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          ),
-                          icon: const Icon(Icons.check_rounded, color: Colors.white),
-                          label: const Text('Attach Voice Recording', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          onPressed: () {
-                            setState(() => _hasVoiceRecording = true);
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Voice recording attached! 🎙️')));
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+        title: 'Voice Note Dictation',
+        onTextRecognized: (text) {
+          setState(() {
+            _contentController.text = _contentController.text.trim().isEmpty
+                ? text
+                : '${_contentController.text}\n$text';
+          });
+        },
       );
     } else if (label == 'More') {
       showModalBottomSheet(

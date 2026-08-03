@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/services/speech_to_text_service.dart';
 import '../../../ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import '../../../notes/data/notes_repository.dart';
 import '../../data/search_repository.dart';
@@ -345,7 +346,21 @@ class _SearchScreenState extends State<SearchScreen>
                     child: const Icon(Icons.cancel_rounded, color: Color(0xFF8C88A6), size: 18.0),
                   )
                 else
-                  const Icon(Icons.mic_rounded, color: Color(0xFF7C3AED), size: 20.0),
+                  GestureDetector(
+                    onTap: () {
+                      SpeechToTextService.listenAndDictate(
+                        context: context,
+                        title: 'Voice Search',
+                        onTextRecognized: (text) {
+                          setState(() {
+                            _searchController.text = text;
+                            _searchQuery = text.toLowerCase().trim();
+                          });
+                        },
+                      );
+                    },
+                    child: const Icon(Icons.mic_rounded, color: Color(0xFF7C3AED), size: 20.0),
+                  ),
               ],
             ),
           ),

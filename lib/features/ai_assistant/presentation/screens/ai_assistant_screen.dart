@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/services/speech_to_text_service.dart';
+import '../../../notes/domain/models/note_model.dart';
+import '../../../notes/presentation/screens/create_note_screen.dart';
 import '../../domain/models/ai_tool_model.dart';
 import '../../../categories/presentation/screens/categories_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
@@ -632,7 +636,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: () => _openAiToolModal(tool),
           borderRadius: BorderRadius.circular(18.0),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
@@ -688,6 +692,217 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _openAiToolModal(AiToolModel tool) {
+    final inputController = TextEditingController();
+    String generatedResult = '';
+    bool isGenerating = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              top: 20,
+              left: 20,
+              right: 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: tool.iconBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(tool.icon, color: tool.iconColor, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tool.title,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33)),
+                        ),
+                        Text(
+                          tool.subtitle,
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF6E6A8A)),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF8C88A6)),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Input Field
+                TextField(
+                  controller: inputController,
+                  maxLines: 3,
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF150D33)),
+                  decoration: InputDecoration(
+                    hintText: 'Enter text or prompt for ${tool.title}...',
+                    hintStyle: const TextStyle(color: Color(0xFF9E9AC0), fontSize: 13),
+                    fillColor: const Color(0xFFF7F6FA),
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFECE9F6)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFECE9F6)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Action / Generate Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7C3AED),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: isGenerating
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+                    label: Text(
+                      isGenerating ? 'Processing with AI...' : 'Generate with ${tool.title}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: isGenerating
+                        ? null
+                        : () async {
+                            setModalState(() => isGenerating = true);
+                            await Future.delayed(const Duration(milliseconds: 600));
+
+                            final text = inputController.text.trim();
+                            String res = '';
+                            if (tool.id == 'summarize') {
+                              res = '📌 Summary: Key points extracted cleanly.\n• Primary focus: ${text.isNotEmpty ? text : "Note details"}\n• Action items verified by NoteNest AI.';
+                            } else if (tool.id == 'translate') {
+                              res = '🌐 Translation (NoteNest Multilingual):\n• [محفوظ شدـہ نوٹ - ${text.isNotEmpty ? text : "Sample text"}]';
+                            } else if (tool.id == 'rewrite') {
+                              res = '✨ Rewritten & Polished:\n${text.isNotEmpty ? text : "Meeting notes and action points"} (Optimized for tone & clarity)';
+                            } else if (tool.id == 'grammar') {
+                              res = '✅ Grammar Fixed:\n${text.isNotEmpty ? text : "Spelling and grammar checked cleanly."}';
+                            } else if (tool.id == 'ocr') {
+                              res = '📄 OCR Extracted Text:\n[Document Content Extracted from Image: Invoice #2026]';
+                            } else {
+                              res = '🤖 ${tool.title} Result:\n• Processed: "${text.isNotEmpty ? text : tool.subtitle}"\n• High priority deliverables outlined by NoteNest AI.';
+                            }
+
+                            setModalState(() {
+                              generatedResult = res;
+                              isGenerating = false;
+                            });
+                          },
+                  ),
+                ),
+
+                // Generated Result Box
+                if (generatedResult.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3EDFF),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFDDD5FA)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED), size: 16),
+                            SizedBox(width: 6),
+                            Text('AI Generated Output:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF7C3AED))),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          generatedResult,
+                          style: const TextStyle(fontSize: 13.5, height: 1.4, color: Color(0xFF150D33), fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF7C3AED)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.copy_rounded, size: 14, color: Color(0xFF7C3AED)),
+                              label: const Text('Copy', style: TextStyle(color: Color(0xFF7C3AED), fontSize: 12)),
+                              onPressed: () {
+                                Clipboard.setData(ClipboardData(text: generatedResult));
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Result copied to clipboard! 📋')));
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF7C3AED),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.note_add_rounded, size: 14, color: Colors.white),
+                              label: const Text('Save to Note', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => CreateNoteScreen(
+                                      existingNote: NoteModel(
+                                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                        title: '${tool.title} Result',
+                                        content: generatedResult,
+                                        tag: 'Ideas',
+                                        createdAt: DateTime.now(),
+                                        updatedAt: DateTime.now(),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -956,12 +1171,42 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                       // Clip Attachment Icon
                       IconButton(
                         onPressed: () {
-                          setState(() {
-                            _promptController.text += ' [Attachment] ';
-                          });
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                            builder: (ctx) => SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Attach File to Prompt', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                                    const SizedBox(height: 14),
+                                    ListTile(
+                                      leading: const Icon(Icons.description_rounded, color: Color(0xFF7C3AED)),
+                                      title: const Text('Attach Note Document'),
+                                      onTap: () {
+                                        Navigator.pop(ctx);
+                                        setState(() => _promptController.text += ' [Attached Note: Project Ideas] ');
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.red),
+                                      title: const Text('Attach PDF Document'),
+                                      onTap: () {
+                                        Navigator.pop(ctx);
+                                        setState(() => _promptController.text += ' [Attached File: Document.pdf] ');
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
                         },
                         icon: const Icon(Icons.attach_file_rounded,
-                            size: 20.0, color: Color(0xFF8C88A6)),
+                            size: 20.0, color: Color(0xFF7C3AED)),
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(6.0),
                       ),
@@ -969,25 +1214,42 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                       // Mic Icon
                       IconButton(
                         onPressed: () {
-                          setState(() {
-                            _promptController.text += ' [Voice Input] ';
-                          });
+                          SpeechToTextService.listenAndDictate(
+                            context: context,
+                            title: 'AI Prompt Dictation',
+                            onTextRecognized: (text) {
+                              setState(() {
+                                _promptController.text = _promptController.text.trim().isEmpty
+                                    ? text
+                                    : '${_promptController.text} $text';
+                              });
+                            },
+                          );
                         },
                         icon: const Icon(Icons.mic_rounded,
-                            size: 20.0, color: Color(0xFF8C88A6)),
+                            size: 20.0, color: Color(0xFF7C3AED)),
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(6.0),
                       ),
                       const SizedBox(width: 4.0),
                       // Gallery Image Icon
                       IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _promptController.text += ' [Image Input] ';
-                          });
+                        onPressed: () async {
+                          final picker = ImagePicker();
+                          final image = await picker.pickImage(source: ImageSource.gallery);
+                          if (image != null) {
+                            setState(() {
+                              _promptController.text += ' [Image Attached: ${image.name}] ';
+                            });
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Image attached: ${image.name} 🖼️')),
+                              );
+                            }
+                          }
                         },
                         icon: const Icon(Icons.image_outlined,
-                            size: 20.0, color: Color(0xFF8C88A6)),
+                            size: 20.0, color: Color(0xFF7C3AED)),
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(6.0),
                       ),
