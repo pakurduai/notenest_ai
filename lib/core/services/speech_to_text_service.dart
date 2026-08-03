@@ -208,6 +208,21 @@ class _SpeechListeningBottomSheetState extends State<_SpeechListeningBottomSheet
     setState(() => _isListening = false);
   }
 
+  void _checkAndPerformVoiceNavigation(BuildContext context, String text) {
+    final lower = text.toLowerCase();
+    if (lower.contains('search') || lower.contains('find')) {
+      // Voice Command: Search
+    } else if (lower.contains('category') || lower.contains('categories')) {
+      // Voice Command: Categories
+    } else if (lower.contains('create') || lower.contains('new note') || lower.contains('add note')) {
+      // Voice Command: Create Note
+    } else if (lower.contains('setting') || lower.contains('settings')) {
+      // Voice Command: Settings
+    } else if (lower.contains('ai') || lower.contains('assistant')) {
+      // Voice Command: AI Assistant
+    }
+  }
+
   @override
   void dispose() {
     _animController.dispose();
@@ -369,8 +384,10 @@ class _SpeechListeningBottomSheetState extends State<_SpeechListeningBottomSheet
                     ),
                     onPressed: () {
                       _stopListening();
-                      if (_recognizedWords.trim().isNotEmpty) {
-                        widget.onTextRecognized(_recognizedWords.trim());
+                      final text = _recognizedWords.trim();
+                      if (text.isNotEmpty) {
+                        widget.onTextRecognized(text);
+                        _checkAndPerformVoiceNavigation(context, text);
                       }
                       Navigator.pop(context);
                     },

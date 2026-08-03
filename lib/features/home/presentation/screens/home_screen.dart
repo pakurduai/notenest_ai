@@ -7,6 +7,9 @@ import 'package:notenest_ai/features/ai_assistant/presentation/screens/ai_assist
 import 'package:notenest_ai/features/settings/presentation/screens/settings_screen.dart';
 import 'package:notenest_ai/features/notes/data/notes_repository.dart';
 import 'package:notenest_ai/features/notes/domain/models/note_model.dart';
+import 'package:notenest_ai/core/widgets/ad_banner_widget.dart';
+import 'package:notenest_ai/core/services/audio_haptic_service.dart';
+import 'package:notenest_ai/core/widgets/ambient_background_glow_widget.dart';
 
 /// Home Screen — Production-ready, 100% Flutter widget implementation
 /// matching the official NoteNest AI design reference pixel-to-pixel.
@@ -74,10 +77,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F5FA),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
+      body: AmbientBackgroundGlowWidget(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -148,6 +152,10 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
 
+              const SliverToBoxAdapter(
+                child: AdBannerWidget(),
+              ),
+
               // Bottom Padding for Floating FAB & Navigation Bar
               SliverToBoxAdapter(
                 child: SizedBox(height: bottomPadding + 80.0),
@@ -156,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ),
+    ),
 
       // ── Floating Action Button (FAB) ──
       floatingActionButton: _buildFloatingActionButton(),
@@ -235,10 +244,12 @@ class _HomeScreenState extends State<HomeScreen>
         _buildCircleIconButton(
           icon: Icons.notifications_none_rounded,
           onTap: () {
+            AudioHapticService.playNotificationBellSound();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Notifications: No new notifications'),
+                content: Text('🔔 Notification: 1 New Reminder set for 09:00 AM'),
                 duration: Duration(seconds: 2),
+                backgroundColor: Color(0xFF7C3AED),
               ),
             );
           },

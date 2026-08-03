@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../home/presentation/screens/home_screen.dart';
@@ -15,6 +16,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  Timer? _autoForwardTimer;
 
   static const List<String> _onboardingImages = [
     'assets/images/onboarding_screen_1.png',
@@ -35,10 +37,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
+
+    // Auto-forward timer: advance page every 2.0 seconds automatically
+    _startAutoForwardTimer();
+  }
+
+  void _startAutoForwardTimer() {
+    _autoForwardTimer?.cancel();
+    _autoForwardTimer = Timer.periodic(const Duration(milliseconds: 2000), (timer) {
+      if (!mounted) return;
+      if (_currentPage < _onboardingImages.length - 1) {
+        _onNext();
+      } else {
+        timer.cancel();
+        _navigateToHome();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _autoForwardTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }

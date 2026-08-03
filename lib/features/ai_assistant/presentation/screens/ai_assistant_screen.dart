@@ -8,6 +8,8 @@ import '../../domain/models/ai_tool_model.dart';
 import '../../../categories/presentation/screens/categories_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
+import '../../../../core/services/gemini_ai_service.dart';
+import '../../../../core/services/audio_haptic_service.dart';
 
 /// AI Assistant Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference.
@@ -797,24 +799,12 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                     onPressed: isGenerating
                         ? null
                         : () async {
+                            AudioHapticService.playButtonSound();
                             setModalState(() => isGenerating = true);
-                            await Future.delayed(const Duration(milliseconds: 600));
-
+                            
                             final text = inputController.text.trim();
-                            String res = '';
-                            if (tool.id == 'summarize') {
-                              res = '📌 Summary: Key points extracted cleanly.\n• Primary focus: ${text.isNotEmpty ? text : "Note details"}\n• Action items verified by NoteNest AI.';
-                            } else if (tool.id == 'translate') {
-                              res = '🌐 Translation (NoteNest Multilingual):\n• [محفوظ شدـہ نوٹ - ${text.isNotEmpty ? text : "Sample text"}]';
-                            } else if (tool.id == 'rewrite') {
-                              res = '✨ Rewritten & Polished:\n${text.isNotEmpty ? text : "Meeting notes and action points"} (Optimized for tone & clarity)';
-                            } else if (tool.id == 'grammar') {
-                              res = '✅ Grammar Fixed:\n${text.isNotEmpty ? text : "Spelling and grammar checked cleanly."}';
-                            } else if (tool.id == 'ocr') {
-                              res = '📄 OCR Extracted Text:\n[Document Content Extracted from Image: Invoice #2026]';
-                            } else {
-                              res = '🤖 ${tool.title} Result:\n• Processed: "${text.isNotEmpty ? text : tool.subtitle}"\n• High priority deliverables outlined by NoteNest AI.';
-                            }
+                            final prompt = 'Perform ${tool.title} task on text: "${text.isNotEmpty ? text : tool.subtitle}"';
+                            final res = await GeminiAiService.instance.generateContent(prompt: prompt);
 
                             setModalState(() {
                               generatedResult = res;

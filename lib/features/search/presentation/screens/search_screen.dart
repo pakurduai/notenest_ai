@@ -7,6 +7,8 @@ import '../../data/search_repository.dart';
 import '../../../settings/data/settings_repository.dart';
 import '../../../notes/domain/models/note_model.dart';
 import '../../../notes/presentation/screens/create_note_screen.dart';
+import '../../../../core/widgets/custom_color_picker_modal.dart';
+import '../../../../core/services/audio_haptic_service.dart';
 
 /// Search Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference.
@@ -43,14 +45,14 @@ class _SearchScreenState extends State<SearchScreen>
     'travel plan',
   ];
 
-  final List<Color> _filterColors = const [
-    Color(0xFFFFD56B), // Yellow
-    Color(0xFFFF94B8), // Pink
-    Color(0xFF70C5FF), // Blue
-    Color(0xFF6EE7B7), // Teal
-    Color(0xFFC084FC), // Purple
-    Color(0xFFFB923C), // Orange
-    Color(0xFFCBD5E1), // Grey
+  final List<Color> _filterColors = [
+    const Color(0xFFFFD56B), // Yellow
+    const Color(0xFFFF94B8), // Pink
+    const Color(0xFF70C5FF), // Blue
+    const Color(0xFF6EE7B7), // Teal
+    const Color(0xFFC084FC), // Purple
+    const Color(0xFFFB923C), // Orange
+    const Color(0xFFCBD5E1), // Grey
   ];
 
   @override
@@ -583,7 +585,10 @@ class _SearchScreenState extends State<SearchScreen>
                 final color = _filterColors[index];
                 final isSelected = _selectedColorIndex == index + 1;
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedColorIndex = index + 1),
+                  onTap: () {
+                    AudioHapticService.playButtonSound();
+                    setState(() => _selectedColorIndex = index + 1);
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     width: 30.0,
@@ -605,6 +610,32 @@ class _SearchScreenState extends State<SearchScreen>
                   ),
                 );
               }),
+
+              // Custom Color Creator Plus Button (+)
+              GestureDetector(
+                onTap: () {
+                  AudioHapticService.playButtonSound();
+                  CustomColorPickerModal.show(
+                    context,
+                    onColorSelected: (newColor) {
+                      setState(() {
+                        _filterColors.add(newColor);
+                        _selectedColorIndex = _filterColors.length;
+                      });
+                    },
+                  );
+                },
+                child: Container(
+                  width: 30.0,
+                  height: 30.0,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3EDFF),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF7C3AED), width: 1.5),
+                  ),
+                  child: const Icon(Icons.add, color: Color(0xFF7C3AED), size: 18),
+                ),
+              ),
             ],
           ),
         ],

@@ -7,6 +7,7 @@ import '../../../ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import 'pro_upgrade_screen.dart';
 import 'trash_screen.dart';
+import '../../../../core/services/audio_haptic_service.dart';
 
 /// Settings Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference.
@@ -958,11 +959,22 @@ class _SettingsScreenState extends State<SettingsScreen>
                 subtitle: const Text('Receive a gentle reminder at 09:00 AM'),
                 activeTrackColor: const Color(0xFF7C3AED),
               ),
-              SwitchListTile(
-                value: true,
-                onChanged: (val) {},
-                title: const Text('Notification Sound & Vibration', style: TextStyle(fontWeight: FontWeight.bold)),
-                activeTrackColor: const Color(0xFF7C3AED),
+              StatefulBuilder(
+                builder: (context, setModalState) {
+                  return SwitchListTile(
+                    value: AudioHapticService.isSoundEnabled,
+                    onChanged: (val) {
+                      setModalState(() {
+                        AudioHapticService.isSoundEnabled = val;
+                      });
+                      setState(() {});
+                      if (val) AudioHapticService.playNotificationBellSound();
+                    },
+                    title: const Text('App Sound Effects & Vibration', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(AudioHapticService.isSoundEnabled ? 'Sound ON (Tactile Feedback active)' : 'Sound OFF (Muted)'),
+                    activeTrackColor: const Color(0xFF7C3AED),
+                  );
+                },
               ),
             ],
           ),

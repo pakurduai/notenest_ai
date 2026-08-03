@@ -4,12 +4,16 @@ import 'core/theme/app_theme.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 
 import 'core/database/hive_database_service.dart';
+import 'core/services/ad_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive Database for persistent local storage
   await HiveDatabaseService.init();
+
+  // Initialize Google Mobile Ads SDK
+  await AdService.instance.init();
 
   // Configure Edge-to-Edge System UI Mode globally
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

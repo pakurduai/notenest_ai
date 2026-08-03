@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/speech_to_text_service.dart';
+import '../../../../core/services/ad_service.dart';
 import '../../domain/models/note_model.dart';
 import '../../data/notes_repository.dart';
 
@@ -178,6 +179,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
     );
 
     _notesRepo.saveNote(note);
+    AdService.instance.showInterstitialAdOnAction();
   }
 
   void _triggerAiPrompt(String actionName) async {
