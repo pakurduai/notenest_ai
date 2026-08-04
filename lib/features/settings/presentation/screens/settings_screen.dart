@@ -130,6 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   @override
   void initState() {
     super.initState();
+    AudioHapticService.playNavigationSound();
 
     // Edge-to-edge status bar styling
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -401,33 +402,35 @@ class _SettingsScreenState extends State<SettingsScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Sharp High-DPI 3D Vector Monogram Logo Avatar
+            // Official NoteNest AI High-Res App Icon Badge
             Container(
               width: 54.0,
               height: 54.0,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0x407C3AED),
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
                     blurRadius: 12.0,
-                    offset: Offset(0, 4),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Center(
-                child: Text(
-                  'N',
-                  style: TextStyle(
-                    fontSize: 26.0,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: -1.0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Image.asset(
+                  'assets/playstore/icon_512.png',
+                  width: 54.0,
+                  height: 54.0,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: const Color(0xFF7C3AED),
+                    child: const Center(
+                      child: Text(
+                        'N',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
               ),

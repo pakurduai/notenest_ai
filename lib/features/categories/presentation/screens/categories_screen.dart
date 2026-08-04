@@ -9,6 +9,7 @@ import '../../../settings/presentation/screens/settings_screen.dart';
 import '../../../notes/data/notes_repository.dart';
 import '../../data/categories_repository.dart';
 import '../../../notes/domain/models/note_model.dart';
+import '../../../../core/services/audio_haptic_service.dart';
 
 /// Categories Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference.
@@ -109,6 +110,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   @override
   void initState() {
     super.initState();
+    AudioHapticService.playNavigationSound();
     _categoriesRepo = CategoriesRepository(_notesRepo);
 
     // Edge-to-edge status bar setup
@@ -665,7 +667,13 @@ class _CategoriesScreenState extends State<CategoriesScreen>
             ),
             const SizedBox(width: 8.0),
             InkWell(
-              onTap: () {},
+              onTap: () {
+                AudioHapticService.playButtonSound();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                );
+              },
               child: const Row(
                 children: [
                   Text(

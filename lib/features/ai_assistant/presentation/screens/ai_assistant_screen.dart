@@ -483,26 +483,23 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                         ],
                       ),
                     ),
-                    Container(
-                      width: 76.0,
-                      height: 76.0,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF7C3AED), Color(0xFF00C6FF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0x407C3AED),
-                            blurRadius: 14.0,
-                            offset: Offset(0, 4),
+                    Image.asset(
+                      'assets/images/home_robot.png',
+                      width: 86.0,
+                      height: 86.0,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 76.0,
+                        height: 76.0,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF7C3AED), Color(0xFF00C6FF)],
                           ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.smart_toy_rounded, size: 44.0, color: Colors.white),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.smart_toy_rounded, size: 44.0, color: Colors.white),
+                        ),
                       ),
                     ),
                   ],

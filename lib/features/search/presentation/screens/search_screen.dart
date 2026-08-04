@@ -8,6 +8,9 @@ import '../../../settings/data/settings_repository.dart';
 import '../../../notes/domain/models/note_model.dart';
 import '../../../notes/presentation/screens/create_note_screen.dart';
 import '../../../../core/widgets/custom_color_picker_modal.dart';
+import '../../../home/presentation/screens/home_screen.dart';
+import '../../../categories/presentation/screens/categories_screen.dart';
+import '../../../settings/presentation/screens/settings_screen.dart';
 import '../../../../core/services/audio_haptic_service.dart';
 
 /// Search Screen — Rebuilt to 100% pixel-to-pixel perfection
@@ -114,68 +117,80 @@ class _SearchScreenState extends State<SearchScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6FA),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Column(
-            children: [
-              // ── 1. Top App Header Bar ──
-              Padding(
-                padding: EdgeInsets.only(
-                  top: topPadding + 10.0,
-                  left: 16.0,
-                  right: 16.0,
-                  bottom: 8.0,
-                ),
-                child: _buildTopHeader(),
-              ),
-
-              // ── 2. Scrollable Search Content ──
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Search Input Field & Filter Toggle Button
-                      _buildSearchInputFieldRow(),
-                      const SizedBox(height: 12.0),
-
-                      // Category Filter Chips Row (All Notes, Favorites, Pinned, Checklists, Attachments)
-                      _buildCategoryChipsRow(),
-                      const SizedBox(height: 12.0),
-
-                      // Advanced Filters Section Box (Categories, Tags, Colors, Sort + Color Circles)
-                      if (_showAdvancedFilters) ...[
-                        _buildAdvancedFiltersCard(),
-                        const SizedBox(height: 14.0),
-                      ],
-
-                      // Recent Searches Section (Chips + Clear All)
-                      if (_recentSearches.isNotEmpty) ...[
-                        _buildRecentSearchesSection(),
-                        const SizedBox(height: 14.0),
-                      ],
-
-                      // AI Smart Search Card
-                      _buildAiSmartSearchCard(),
-                      const SizedBox(height: 16.0),
-
-                      // Search Results Section (Header + List/Grid View Cards)
-                      _buildSearchResultsHeader(),
-                      const SizedBox(height: 10.0),
-                      _buildSearchResultsList(),
-
-                      SizedBox(height: bottomPadding + 30.0),
-                    ],
+      body: Stack(
+        children: [
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Column(
+                children: [
+                  // ── 1. Top App Header Bar ──
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: topPadding + 10.0,
+                      left: 16.0,
+                      right: 16.0,
+                      bottom: 8.0,
+                    ),
+                    child: _buildTopHeader(),
                   ),
-                ),
+
+                  // ── 2. Scrollable Search Content ──
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Search Input Field & Filter Toggle Button
+                          _buildSearchInputFieldRow(),
+                          const SizedBox(height: 12.0),
+
+                          // Category Filter Chips Row (All Notes, Favorites, Pinned, Checklists, Attachments)
+                          _buildCategoryChipsRow(),
+                          const SizedBox(height: 12.0),
+
+                          // Advanced Filters Section Box (Categories, Tags, Colors, Sort + Color Circles)
+                          if (_showAdvancedFilters) ...[
+                            _buildAdvancedFiltersCard(),
+                            const SizedBox(height: 14.0),
+                          ],
+
+                          // Recent Searches Section (Chips + Clear All)
+                          if (_recentSearches.isNotEmpty) ...[
+                            _buildRecentSearchesSection(),
+                            const SizedBox(height: 14.0),
+                          ],
+
+                          // AI Smart Search Card
+                          _buildAiSmartSearchCard(),
+                          const SizedBox(height: 16.0),
+
+                          // Search Results Section (Header + List/Grid View Cards)
+                          _buildSearchResultsHeader(),
+                          const SizedBox(height: 10.0),
+                          _buildSearchResultsList(),
+
+                          SizedBox(height: bottomPadding + 80.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+
+          // Floating Bottom Navigation Bar (Consistent across all screens)
+          Positioned(
+            left: 16.0,
+            right: 16.0,
+            bottom: bottomPadding + 12.0,
+            child: _buildBottomNavigationBar(),
+          ),
+        ],
       ),
     );
   }
@@ -1093,6 +1108,117 @@ class _SearchScreenState extends State<SearchScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // 7. Floating Bottom Navigation Bar
+  // ─────────────────────────────────────────────
+
+  Widget _buildBottomNavigationBar() {
+    const navItems = [
+      {'label': 'Home', 'icon': Icons.home_rounded},
+      {'label': 'Search', 'icon': Icons.search_rounded},
+      {'label': 'AI Tools', 'icon': Icons.auto_awesome_rounded},
+      {'label': 'Categories', 'icon': Icons.folder_rounded},
+      {'label': 'Settings', 'icon': Icons.settings_rounded},
+    ];
+
+    return Container(
+      height: 64.0,
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20.0,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(navItems.length, (index) {
+          final isSelected = index == 1; // Search tab is selected
+          final item = navItems[index];
+
+          if (isSelected) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3EDFF),
+                borderRadius: BorderRadius.circular(18.0),
+              ),
+              child: Row(
+                children: [
+                  Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
+                  const SizedBox(width: 6.0),
+                  Text(
+                    item['label'] as String,
+                    style: const TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return InkWell(
+            onTap: () {
+              AudioHapticService.playButtonSound();
+              if (index == 0) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
+                );
+              } else if (index == 3) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                );
+              } else if (index == 4) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                );
+              }
+            },
+            borderRadius: BorderRadius.circular(16.0),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    item['icon'] as IconData,
+                    size: 20.0,
+                    color: const Color(0xFF9C98B6),
+                  ),
+                  const SizedBox(height: 2.0),
+                  Text(
+                    item['label'] as String,
+                    style: const TextStyle(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF9C98B6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

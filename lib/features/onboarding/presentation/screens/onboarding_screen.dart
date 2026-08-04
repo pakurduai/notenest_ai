@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../widgets/onboarding_page.dart';
+import '../../../../core/services/audio_haptic_service.dart';
 
 /// Main Onboarding Screen controller managing 100% pixel-perfect design images
 /// with smooth slide transitions, edge-to-edge layout, and interactive navigation.
@@ -27,6 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    AudioHapticService.playNavigationSound();
     // System UI overlay configuration for edge-to-edge full-screen display
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(
@@ -63,6 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onNext() {
+    AudioHapticService.playButtonSound();
     if (_currentPage < _onboardingImages.length - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
@@ -75,6 +78,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onSkip() {
+    AudioHapticService.playButtonSound();
     _navigateToHome();
   }
 
