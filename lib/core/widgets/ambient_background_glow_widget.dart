@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 /// Ambient Soft Gradient Background Glows Widget
 /// Renders moving/pulsing radial pastel purple & cyan gradient light orbs in the background.
 class AmbientBackgroundGlowWidget extends StatefulWidget {
+  /// Global toggle for ambient glow lights
+  static bool isGlowEnabled = true;
+
   final Widget child;
 
   const AmbientBackgroundGlowWidget({
@@ -35,6 +38,13 @@ class _AmbientBackgroundGlowWidgetState extends State<AmbientBackgroundGlowWidge
 
   @override
   Widget build(BuildContext context) {
+    if (!AmbientBackgroundGlowWidget.isGlowEnabled) {
+      return Container(
+        color: const Color(0xFFF6F5FA),
+        child: widget.child,
+      );
+    }
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {

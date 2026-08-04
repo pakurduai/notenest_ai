@@ -376,7 +376,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {},
+              onTap: () {
+                AudioHapticService.playButtonSound();
+                _showAiHistoryModal();
+              },
               customBorder: const CircleBorder(),
               child: const Center(
                 child: Icon(Icons.access_time_rounded, color: Color(0xFF150D33), size: 20.0),
@@ -404,7 +407,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {},
+              onTap: () {
+                AudioHapticService.playButtonSound();
+                _showAiOptionsMenu();
+              },
               customBorder: const CircleBorder(),
               child: const Center(
                 child: Icon(Icons.more_vert_rounded, color: Color(0xFF150D33), size: 20.0),
@@ -477,15 +483,26 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                         ],
                       ),
                     ),
-                    Image.asset(
-                      'assets/images/home_robot.png',
-                      width: 86.0,
-                      height: 86.0,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.smart_toy_rounded,
-                        size: 50.0,
-                        color: Color(0xFF7C3AED),
+                    Container(
+                      width: 76.0,
+                      height: 76.0,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF7C3AED), Color(0xFF00C6FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x407C3AED),
+                            blurRadius: 14.0,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.smart_toy_rounded, size: 44.0, color: Colors.white),
                       ),
                     ),
                   ],
@@ -714,7 +731,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
         builder: (context, setModalState) {
           return Padding(
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + MediaQuery.of(ctx).padding.bottom + 28.0,
               top: 20,
               left: 20,
               right: 20,
@@ -893,6 +910,89 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showAiHistoryModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.0))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.history_rounded, color: Color(0xFF7C3AED), size: 22),
+                  SizedBox(width: 8),
+                  Text('AI Generation History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                ],
+              ),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('Article: Productivity Workflow', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                subtitle: const Text('Generated today • 350 words'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History item loaded! 📜')));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.summarize_rounded, color: Color(0xFF10B981)),
+                title: const Text('Summary: Meeting Notes Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                subtitle: const Text('Generated yesterday • 120 words'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History item loaded! 📜')));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAiOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.0))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('AI Assistant Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.key_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('Gemini API Key Settings'),
+                subtitle: const Text('View or update Google Gemini API Key'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
+                title: const Text('Clear AI History', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AI History Cleared 🧹')));
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

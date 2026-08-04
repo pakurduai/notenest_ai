@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/notes/presentation/screens/create_note_screen.dart';
+import '../../features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
+import '../../features/categories/presentation/screens/categories_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/trash_screen.dart';
 
 /// Unified Speech-to-Text service for NoteNest AI
 class SpeechToTextService {
@@ -209,17 +216,43 @@ class _SpeechListeningBottomSheetState extends State<_SpeechListeningBottomSheet
   }
 
   void _checkAndPerformVoiceNavigation(BuildContext context, String text) {
-    final lower = text.toLowerCase();
-    if (lower.contains('search') || lower.contains('find')) {
-      // Voice Command: Search
-    } else if (lower.contains('category') || lower.contains('categories')) {
-      // Voice Command: Categories
-    } else if (lower.contains('create') || lower.contains('new note') || lower.contains('add note')) {
-      // Voice Command: Create Note
-    } else if (lower.contains('setting') || lower.contains('settings')) {
-      // Voice Command: Settings
-    } else if (lower.contains('ai') || lower.contains('assistant')) {
-      // Voice Command: AI Assistant
+    final lower = text.toLowerCase().trim();
+
+    if (lower.contains('search') || lower.contains('find') || lower.contains('dhoondo') || lower.contains('سرچ')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Search Screen... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+    } else if (lower.contains('home') || lower.contains('main') || lower.contains('ہوم')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Home Screen... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+    } else if (lower.contains('create') || lower.contains('new note') || lower.contains('write') || lower.contains('likho') || lower.contains('نیا نوٹ')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening New Note Editor... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateNoteScreen()));
+    } else if (lower.contains('ai') || lower.contains('assistant') || lower.contains('robot') || lower.contains('gemini') || lower.contains('ای آئی')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening AI Assistant... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const AiAssistantScreen()));
+    } else if (lower.contains('category') || lower.contains('categories') || lower.contains('folder') || lower.contains('اقسام')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Categories... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoriesScreen()));
+    } else if (lower.contains('setting') || lower.contains('settings') || lower.contains('tarseem') || lower.contains('سیٹنگز')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Settings... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+    } else if (lower.contains('trash') || lower.contains('deleted') || lower.contains('bin') || lower.contains('تریاش')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Trash... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen()));
     }
   }
 

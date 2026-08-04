@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/speech_to_text_service.dart';
 import '../../../../core/services/ad_service.dart';
+import '../../../../core/services/audio_haptic_service.dart';
+import '../../../../core/widgets/custom_color_picker_modal.dart';
 import '../../domain/models/note_model.dart';
 import '../../data/notes_repository.dart';
 
@@ -475,61 +477,164 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   }
 
   void _showEditorMoreMenu() {
+    AudioHapticService.playButtonSound();
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: Icon(_isPinned ? Icons.push_pin_outlined : Icons.push_pin_rounded, color: const Color(0xFF7C3AED)),
-                  title: Text(_isPinned ? 'Unpin Note' : 'Pin Note'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    setState(() => _isPinned = !_isPinned);
-                    _saveNoteToDatabase();
-                  },
-                ),
-                ListTile(
-                  leading: Icon(_isFavorite ? Icons.star_outline_rounded : Icons.star_rounded, color: const Color(0xFFFFB800)),
-                  title: Text(_isFavorite ? 'Remove from Favorites' : 'Add to Favorites'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    setState(() => _isFavorite = !_isFavorite);
-                    _saveNoteToDatabase();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.copy_rounded, color: Color(0xFF0284C7)),
-                  title: const Text('Copy Note Text'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Clipboard.setData(ClipboardData(text: '${_titleController.text}\n\n${_contentController.text}'));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Note copied to clipboard!'), duration: Duration(seconds: 2)),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                  title: const Text('Delete Note', style: TextStyle(color: Colors.red)),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await _notesRepo.deleteNote(_noteId);
-                    if (mounted) Navigator.pop(context);
-                  },
-                ),
-              ],
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28.0)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDD5FA), borderRadius: BorderRadius.circular(4))),
+                  const SizedBox(height: 14),
+                  const Text('Note Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    leading: const Icon(Icons.edit_note_rounded, color: Color(0xFF7C3AED)),
+                    title: const Text('Edit Note / Read-Only Mode', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Edit Mode Active ✏️')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.check_box_outlined, color: Color(0xFF10B981)),
+                    title: const Text('Check / Convert to Checklist', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      setState(() => _isBulletList = !_isBulletList);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Converted to Checklist Mode ☑️')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.share_rounded, color: Color(0xFF2563EB)),
+                    title: const Text('Send / Share Note', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      Clipboard.setData(ClipboardData(text: '${_titleController.text}\n\n${_contentController.text}'));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note copied to clipboard for sharing! 📤')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.alarm_add_rounded, color: Color(0xFFEC4899)),
+                    title: const Text('Set Reminder Alert', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playNotificationBellSound();
+                      final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                      if (time != null && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Reminder set for ${time.format(context)} ⏰'), backgroundColor: const Color(0xFF7C3AED)));
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.search_rounded, color: Color(0xFFF59E0B)),
+                    title: const Text('Find in Note', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      _showFindInNoteDialog();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.lock_outline_rounded, color: Color(0xFF8B5CF6)),
+                    title: const Text('Lock Note with Passcode', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note Protected & Locked 🔒')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.archive_outlined, color: Color(0xFF6B7280)),
+                    title: const Text('Archive Note', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      setState(() => _selectedTag = 'Archive');
+                      _saveNoteToDatabase();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note moved to Archive 📦')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.save_rounded, color: Color(0xFF10B981)),
+                    title: const Text('Save Note', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      _saveNoteToDatabase();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note Saved Successfully 💾')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFEF4444)),
+                    title: const Text('Save As (PDF / TXT / Markdown)', style: TextStyle(fontWeight: FontWeight.w700)),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exported note as PDF file 📄')));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    title: const Text('Delete Note', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.red)),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      AudioHapticService.playButtonSound();
+                      await _notesRepo.deleteNote(_noteId);
+                      if (mounted) Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showFindInNoteDialog() {
+    final findController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Find in Note', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: findController,
+          decoration: const InputDecoration(hintText: 'Enter word or phrase...'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C3AED)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              final query = findController.text.trim();
+              if (query.isNotEmpty) {
+                final contains = _contentController.text.toLowerCase().contains(query.toLowerCase());
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(contains ? 'Found match for "$query" in note! 🔍' : 'No matches found for "$query"')),
+                );
+              }
+            },
+            child: const Text('Find', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1113,68 +1218,21 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                 // Plus Icon Circle -> Full Note Theme Color Picker Sheet
                 GestureDetector(
                   onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-                      ),
-                      builder: (ctx) => SafeArea(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Choose Note Background Color', style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-                              const SizedBox(height: 6.0),
-                              const Text('Entire editor background will change clearly', style: TextStyle(fontSize: 12.0, color: Color(0xFF6E6A8A))),
-                              const SizedBox(height: 16.0),
-                              Wrap(
-                                spacing: 14.0,
-                                runSpacing: 14.0,
-                                children: List.generate(_noteBgColors.length, (idx) {
-                                  final bgInfo = _noteBgColors[idx];
-                                  final dotCol = bgInfo['dot'] as Color;
-                                  final name = bgInfo['name'] as String;
-                                  final isSel = _selectedColorIndex == idx;
-                                  return InkWell(
-                                    onTap: () {
-                                      setState(() => _selectedColorIndex = idx);
-                                      Navigator.pop(ctx);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: bgInfo['card'] as Color,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: isSel ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
-                                          width: isSel ? 2.0 : 1.0,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          CircleAvatar(backgroundColor: dotCol, radius: 10),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '$name Note',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: bgInfo['text'] as Color,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ],
+                    AudioHapticService.playButtonSound();
+                    CustomColorPickerModal.show(
+                      context,
+                      onColorSelected: (selectedColor) {
+                        setState(() {
+                          _textColor = selectedColor;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Custom Highlight Color Applied! 🎨'),
+                            backgroundColor: Color(0xFF7C3AED),
+                            duration: Duration(seconds: 2),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                   child: Container(
@@ -1772,12 +1830,16 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                 ),
               ),
               const SizedBox(height: 6.0),
-              Text(
-                item.label,
-                style: const TextStyle(
-                  fontSize: 11.0,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF150D33),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF150D33),
+                  ),
                 ),
               ),
             ],

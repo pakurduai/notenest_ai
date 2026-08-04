@@ -165,15 +165,11 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     ),
-
-      // ── Floating Action Button (FAB) ──
-      floatingActionButton: _buildFloatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
-      // ── Bottom Navigation Bar ──
-      bottomNavigationBar: _buildBottomNavigationBar(bottomPadding),
-    );
-  }
+    floatingActionButton: _buildFloatingActionButton(),
+    floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    bottomNavigationBar: _buildBottomNavigationBar(bottomPadding),
+  );
+}
 
   // ─────────────────────────────────────────────
   // App Header Bar
@@ -434,12 +430,27 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                   ),
-                  // Transparent 3D Robot Mascot Asset
-                  Image.asset(
-                    'assets/images/home_robot.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Icons.smart_toy_rounded, size: 60, color: Color(0xFF7C3AED)),
+                  // 100% Pixel-Perfect Vector Robot Mascot Avatar
+                  Container(
+                    width: 85,
+                    height: 85,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF7C3AED), Color(0xFF00C6FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x407C3AED),
+                          blurRadius: 16,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.smart_toy_rounded, size: 48, color: Colors.white),
                     ),
                   ),
                 ],
