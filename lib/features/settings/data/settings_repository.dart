@@ -4,7 +4,7 @@ import '../../../core/database/hive_database_service.dart';
 
 /// Repository class for persisting user settings, preferences, recent searches, and view state.
 class SettingsRepository {
-  final Box _box = HiveDatabaseService.settingsBox;
+  Box get _box => HiveDatabaseService.settingsBox;
 
   ValueListenable<Box> get settingsListenable => _box.listenable();
 
@@ -59,4 +59,19 @@ class SettingsRepository {
   // View Preference ('list', 'grid')
   bool get isGridView => _box.get('isGridView', defaultValue: false) as bool;
   Future<void> setGridView(bool value) async => await _box.put('isGridView', value);
+
+  // Enabled AI Tools Preference List
+  List<String> getEnabledAiTools() {
+    final raw = _box.get('enabledAiTools', defaultValue: [
+      'ai_writer', 'rewrite', 'summarize', 'translate', 'grammar', 'tone', 'idea_gen', 'title_gen', 'ocr'
+    ]);
+    if (raw is List) {
+      return raw.cast<String>();
+    }
+    return ['ai_writer', 'rewrite', 'summarize', 'translate', 'grammar', 'tone', 'idea_gen', 'title_gen', 'ocr'];
+  }
+
+  Future<void> setEnabledAiTools(List<String> tools) async {
+    await _box.put('enabledAiTools', tools);
+  }
 }

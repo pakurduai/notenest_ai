@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/services/pro_subscription_service.dart';
+import '../../../../core/services/play_billing_service.dart';
 
 /// Pro Upgrade Screen — Matching NoteNest AI design aesthetic
 class ProUpgradeScreen extends StatefulWidget {
@@ -358,7 +360,10 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
+                                    Wrap(
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      spacing: 6.0,
+                                      runSpacing: 4.0,
                                       children: [
                                         Text(
                                           plan['title']!,
@@ -368,8 +373,7 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
                                             color: Colors.white,
                                           ),
                                         ),
-                                        if (plan['badge']!.isNotEmpty) ...[
-                                          const SizedBox(width: 8),
+                                        if (plan['badge']!.isNotEmpty)
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
@@ -379,13 +383,12 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
                                             child: Text(
                                               plan['badge']!,
                                               style: const TextStyle(
-                                                fontSize: 9,
+                                                fontSize: 8.5,
                                                 fontWeight: FontWeight.w900,
                                                 color: Color(0xFF0F0A21),
                                               ),
                                             ),
                                           ),
-                                        ],
                                       ],
                                     ),
                                     const SizedBox(height: 3),
@@ -439,14 +442,7 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
                       child: InkWell(
                         onTap: () {
                           final selected = _plans[_selectedPlanIndex];
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Subscribed to ${selected['title']}! Welcome to NoteNest Pro ✨'),
-                              backgroundColor: const Color(0xFF7C3AED),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            ),
-                          );
+                          _showGooglePlayPurchaseSheet(context, selected);
                         },
                         borderRadius: BorderRadius.circular(18),
                         child: const Center(
@@ -477,13 +473,20 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Purchases restored successfully! 🔄'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
+                        onPressed: () async {
+                          final restored = await ProSubscriptionService.restorePurchases();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(restored
+                                    ? 'Pro Plan Restored Successfully! ✨'
+                                    : 'No active subscription found to restore.'),
+                                backgroundColor: const Color(0xFF7C3AED),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                            );
+                          }
                         },
                         child: const Text(
                           'Restore Purchase',
@@ -494,7 +497,7 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
                       TextButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Terms & Privacy Policy'), duration: Duration(seconds: 2)),
+                            const SnackBar(content: Text('NoteNest Offline Privacy Policy'), duration: Duration(seconds: 2)),
                           );
                         },
                         child: const Text(
@@ -512,6 +515,189 @@ class _ProUpgradeScreenState extends State<ProUpgradeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Shows Google Play In-App Purchase Payment Modal
+  void _showGooglePlayPurchaseSheet(BuildContext context, Map<String, String> plan) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1B1433),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black54,
+                blurRadius: 25,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              
+              // Header Google Play logo & App branding
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.shop_two_rounded, color: Color(0xFF00C6FF), size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'NoteNest: Offline Notes',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Google Play Billing • ${plan['title']}',
+                          style: const TextStyle(
+                            color: Color(0xFFB0A9D0),
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Divider(color: Colors.white12),
+              const SizedBox(height: 16),
+
+              // Price Breakdown
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    plan['title']!,
+                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    plan['price']!,
+                    style: const TextStyle(color: Color(0xFF00C6FF), fontSize: 20, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                plan['subtitle']!,
+                style: const TextStyle(color: Color(0xFF8E88B5), fontSize: 12),
+              ),
+              const SizedBox(height: 24),
+
+              // Payment Method Choice
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.payment_rounded, color: Color(0xFF10B981), size: 22),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Google Pay / Credit Card',
+                            style: TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            'Secured by Google Play Billing API',
+                            style: TextStyle(color: Colors.white54, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 20),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Confirm 1-Tap Subscribe Button
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7C3AED),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 8,
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(sheetContext);
+                    await PlayBillingService.buyPlan(
+                      plan['id']!,
+                      plan['title']!,
+                      plan['price']!,
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('🎉 Congratulations! You are now a NoteNest Pro Member (${plan['title']})'),
+                          backgroundColor: const Color(0xFF10B981),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      );
+                      Navigator.pop(context); // Close ProUpgradeScreen
+                    }
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.touch_app_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Subscribe with 1-Tap',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
     );
   }
 }

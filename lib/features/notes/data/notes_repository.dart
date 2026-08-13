@@ -5,7 +5,7 @@ import '../domain/models/note_model.dart';
 
 /// Repository class providing CRUD & state operations for Notes stored in Hive database.
 class NotesRepository {
-  final Box _box = HiveDatabaseService.notesBox;
+  Box get _box => HiveDatabaseService.notesBox;
 
   /// Exposes Box listenable for reactive UI updates
   ValueListenable<Box> get notesListenable => _box.listenable();
@@ -82,6 +82,31 @@ class NotesRepository {
         .toList();
   }
 
+  /// Retrieves notes with custom sort option (modified, created, alphabetical, color) & tag filter
+  List<NoteModel> getFilteredAndSortedNotes({
+    String category = 'All',
+    String sortBy = 'modified',
+    String? filterTag,
+  }) {
+    List<NoteModel> list = getNotesByCategory(category);
+
+    if (filterTag != null && filterTag.isNotEmpty && filterTag != 'All') {
+      list = list.where((n) => n.tag.toLowerCase() == filterTag.toLowerCase()).toList();
+    }
+
+    if (sortBy == 'created') {
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else if (sortBy == 'alphabetical') {
+      list.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    } else if (sortBy == 'color') {
+      list.sort((a, b) => a.tag.compareTo(b.tag));
+    } else {
+      list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    }
+
+    return list;
+  }
+
   /// Gets single note by ID
   NoteModel? getNoteById(String id) {
     final raw = _box.get(id);
@@ -148,5 +173,50 @@ class NotesRepository {
       );
       await saveNote(updated);
     }
+  }
+
+  /// Seeds helpful starter notes if box is completely empty
+  Future<void> seedInitialNotesIfEmpty() async {
+    if (_box.isEmpty) {
+      final now = DateTime.now();
+      final sampleNotes = [
+        NoteModel(
+          id: 'note_1',
+          title: 'Welcome to NoteNest ✨',
+          content: 'Tap any note to view or edit. Use the Floating Action Button (+) below to create text notes, checklists, voice notes, and AI notes.',
+          tag: 'Ideas',
+          isPinned: true,
+          createdAt: now.subtract(const Duration(hours: 1)),
+          updatedAt: now.subtract(const Duration(hours: 1)),
+        ),
+        NoteModel(
+          id: 'note_2',
+          title: 'Shopping Checklist 🛒',
+          content: '[ ] Fresh Milk\n[ ] Whole Grain Bread\n[ ] Organic Eggs\n[ ] Green Apples\n[ ] Ground Coffee',
+          tag: 'Personal',
+          isPinned: false,
+          createdAt: now.subtract(const Duration(hours: 3)),
+          updatedAt: now.subtract(const Duration(hours: 3)),
+        ),
+        NoteModel(
+          id: 'note_3',
+          title: 'Project Brainstorm 🚀',
+          content: '• Build high quality offline note app\n• Support rich text, speech dictation, tags\n• Material 3 UI design & web support',
+          tag: 'Work',
+          isPinned: false,
+          createdAt: now.subtract(const Duration(hours: 5)),
+          updatedAt: now.subtract(const Duration(hours: 5)),
+        ),
+      ];
+
+      for (var note in sampleNotes) {
+        await saveNote(note);
+      }
+    }
+  }
+
+  /// Ensures a clean initial state if needed
+  Future<void> clearSampleNotesForCleanStart() async {
+    await seedInitialNotesIfEmpty();
   }
 }

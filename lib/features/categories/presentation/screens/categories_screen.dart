@@ -398,39 +398,46 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                     child: Icon(Icons.folder_rounded, color: Color(0xFF7C3AED), size: 28.0),
                   ),
                 ),
-                const SizedBox(width: 12.0),
+                const SizedBox(width: 10.0),
 
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Categories',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF6E6A8A),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Total Categories',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6E6A8A),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2.0),
-                    const Text(
-                      '8',
-                      style: TextStyle(
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF7C3AED),
-                        height: 1.1,
+                      const SizedBox(height: 2.0),
+                      const Text(
+                        '8',
+                        style: TextStyle(
+                          fontSize: 22.0,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF7C3AED),
+                          height: 1.1,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2.0),
-                    Text(
-                      '${_notesRepo.getAllActiveNotes().length} Notes',
-                      style: const TextStyle(
-                        fontSize: 11.0,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF8C88A6),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        '${_notesRepo.getAllActiveNotes().length} Notes',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF8C88A6),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -524,7 +531,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         crossAxisCount: 4,
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 10.0,
-        childAspectRatio: 0.78,
+        childAspectRatio: 0.85,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {
@@ -564,62 +571,68 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           },
           borderRadius: BorderRadius.circular(18.0),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Top Row: Icon Badge & 3-dots Menu
-                Row(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SizedBox(
+                width: 60.0,
+                height: 72.0,
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Top Row: Icon Badge & 3-dots Menu
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 28.0,
+                          height: 28.0,
+                          decoration: BoxDecoration(
+                            color: category.iconBg,
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          child: Icon(category.icon, color: category.iconColor, size: 15.0),
+                        ),
+                        const Icon(Icons.more_vert_rounded, color: Color(0xFF9C98B6), size: 13.0),
+                      ],
+                    ),
+
+                    // Title & Notes Count
+                    Column(
+                      children: [
+                        Text(
+                          category.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF150D33),
+                          ),
+                        ),
+                        Text(
+                          '${category.noteCount} Notes',
+                          style: const TextStyle(
+                            fontSize: 9.0,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF8C88A6),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Bottom Colored Indicator Bar
                     Container(
+                      height: 2.5,
                       width: 32.0,
-                      height: 32.0,
                       decoration: BoxDecoration(
-                        color: category.iconBg,
-                        borderRadius: BorderRadius.circular(11.0),
-                      ),
-                      child: Icon(category.icon, color: category.iconColor, size: 17.0),
-                    ),
-                    const Icon(Icons.more_vert_rounded, color: Color(0xFF9C98B6), size: 14.0),
-                  ],
-                ),
-
-                // Title & Notes Count
-                Column(
-                  children: [
-                    Text(
-                      category.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF150D33),
-                      ),
-                    ),
-                    const SizedBox(height: 2.0),
-                    Text(
-                      '${category.noteCount} Notes',
-                      style: const TextStyle(
-                        fontSize: 10.0,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF8C88A6),
+                        color: category.indicatorColor,
+                        borderRadius: BorderRadius.circular(2.0),
                       ),
                     ),
                   ],
                 ),
-
-                // Bottom Colored Indicator Bar
-                Container(
-                  height: 3.0,
-                  width: 36.0,
-                  decoration: BoxDecoration(
-                    color: category.indicatorColor,
-                    borderRadius: BorderRadius.circular(2.0),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -893,79 +906,96 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(navItems.length, (index) {
           final isSelected = _currentBottomNavIndex == index;
           final item = navItems[index];
 
           if (isSelected) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3EDFF),
-                borderRadius: BorderRadius.circular(18.0),
-              ),
-              child: Row(
-                children: [
-                  Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
-                  const SizedBox(width: 6.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF7C3AED),
+            return Flexible(
+              flex: 3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3EDFF),
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
+                    const SizedBox(width: 4.0),
+                    Flexible(
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF7C3AED),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
 
-          return InkWell(
-            onTap: () {
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
-              } else if (index == 2) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
-                );
-              } else if (index == 4) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-              } else {
-                setState(() {
-                  _currentBottomNavIndex = index;
-                });
-              }
-            },
-            borderRadius: BorderRadius.circular(16.0),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    size: 20.0,
-                    color: const Color(0xFF9C98B6),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF9C98B6),
+          return Flexible(
+            flex: 2,
+            child: InkWell(
+              onTap: () {
+                if (index == 0) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                } else if (index == 2) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
+                  );
+                } else if (index == 4) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                } else {
+                  setState(() {
+                    _currentBottomNavIndex = index;
+                  });
+                }
+              },
+              borderRadius: BorderRadius.circular(16.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      size: 20.0,
+                      color: const Color(0xFF9C98B6),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2.0),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF9C98B6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

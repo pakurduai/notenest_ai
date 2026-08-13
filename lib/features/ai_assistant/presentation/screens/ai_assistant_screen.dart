@@ -8,6 +8,7 @@ import '../../domain/models/ai_tool_model.dart';
 import '../../../categories/presentation/screens/categories_screen.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
+import '../../../settings/data/settings_repository.dart';
 import '../../../../core/services/gemini_ai_service.dart';
 import '../../../../core/services/audio_haptic_service.dart';
 
@@ -27,6 +28,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
   late final Animation<Offset> _slideAnimation;
 
   final TextEditingController _promptController = TextEditingController();
+  final SettingsRepository _settingsRepo = SettingsRepository();
+  late Set<String> _enabledToolIds;
   int _activeSegmentIndex = 0; // 0: 'Ask AI', 1: 'Paste Text'
   int _currentBottomNavIndex = 2; // 'AI Tools' active tab
 
@@ -162,6 +165,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
   @override
   void initState() {
     super.initState();
+
+    _enabledToolIds = _settingsRepo.getEnabledAiTools().toSet();
 
     // Edge-to-edge system UI styling
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -429,7 +434,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
   Widget _buildWelcomeAiBanner() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24.0),
         gradient: const LinearGradient(
@@ -454,7 +459,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
             right: 0,
             child: Icon(
               Icons.auto_awesome_rounded,
-              size: 20.0,
+              size: 18.0,
               color: const Color(0xFF7C3AED).withValues(alpha: 0.5),
             ),
           ),
@@ -463,15 +468,15 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
             children: [
               // Left Seamless Transparent 3D Robot Mascot Asset
               SizedBox(
-                width: 90.0,
-                height: 90.0,
+                width: 88.0,
+                height: 88.0,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     // Ambient Purple Glow Shadow
                     Container(
-                      width: 70.0,
-                      height: 70.0,
+                      width: 68.0,
+                      height: 68.0,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         boxShadow: [
@@ -484,21 +489,33 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                       ),
                     ),
                     Image.asset(
-                      'assets/images/home_robot.png',
-                      width: 86.0,
-                      height: 86.0,
+                      'assets/images/energetic_robot_clean.png',
+                      width: 84.0,
+                      height: 84.0,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 76.0,
-                        height: 76.0,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF7C3AED), Color(0xFF00C6FF)],
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/images/ai_card_robot_clean.png',
+                        width: 84.0,
+                        height: 84.0,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Image.asset(
+                          'assets/images/home_robot.png',
+                          width: 84.0,
+                          height: 84.0,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 74.0,
+                            height: 74.0,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF7C3AED), Color(0xFF00C6FF)],
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.smart_toy_rounded, size: 40.0, color: Colors.white),
+                            ),
                           ),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.smart_toy_rounded, size: 44.0, color: Colors.white),
                         ),
                       ),
                     ),
@@ -594,7 +611,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
           ),
         ),
         InkWell(
-          onTap: () {},
+          onTap: () {
+            AudioHapticService.playButtonSound();
+            _showCustomizeAiToolsModal();
+          },
           child: const Row(
             children: [
               Text(
@@ -619,6 +639,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
   // ─────────────────────────────────────────────
 
   Widget _buildAiToolsGrid() {
+    final visibleTools = _aiTools.where((t) => _enabledToolIds.contains(t.id)).toList();
+    if (visibleTools.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -626,11 +650,11 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
         crossAxisCount: 3,
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 10.0,
-        childAspectRatio: 1.15,
+        childAspectRatio: 1.10,
       ),
-      itemCount: _aiTools.length,
+      itemCount: visibleTools.length,
       itemBuilder: (context, index) {
-        final tool = _aiTools[index];
+        final tool = visibleTools[index];
         return _buildAiToolGridCard(tool);
       },
     );
@@ -655,56 +679,63 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
           onTap: () => _openAiToolModal(tool),
           borderRadius: BorderRadius.circular(18.0),
           child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Top Icon Badge & Chevron
-                Row(
+            padding: const EdgeInsets.all(6.0),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: 80.0,
+                height: 65.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 32.0,
-                      height: 32.0,
-                      decoration: BoxDecoration(
-                        color: tool.iconBg,
-                        borderRadius: BorderRadius.circular(11.0),
-                      ),
-                      child: Icon(tool.icon, color: tool.iconColor, size: 17.0),
+                    // Top Icon Badge & Chevron
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 28.0,
+                          height: 28.0,
+                          decoration: BoxDecoration(
+                            color: tool.iconBg,
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          child: Icon(tool.icon, color: tool.iconColor, size: 15.0),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: Color(0xFF9C98B6), size: 14.0),
+                      ],
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF9C98B6), size: 16.0),
-                  ],
-                ),
 
-                // Title & Subtitle
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tool.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF150D33),
-                      ),
-                    ),
-                    const SizedBox(height: 1.0),
-                    Text(
-                      tool.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF8C88A6),
-                      ),
+                    // Title & Subtitle
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tool.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF150D33),
+                          ),
+                        ),
+                        Text(
+                          tool.subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF8C88A6),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -911,92 +942,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
     );
   }
 
-  void _showAiHistoryModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.0))),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.history_rounded, color: Color(0xFF7C3AED), size: 22),
-                  SizedBox(width: 8),
-                  Text('AI Generation History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-                ],
-              ),
-              const SizedBox(height: 14),
-              ListTile(
-                leading: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED)),
-                title: const Text('Article: Productivity Workflow', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                subtitle: const Text('Generated today • 350 words'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History item loaded! 📜')));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.summarize_rounded, color: Color(0xFF10B981)),
-                title: const Text('Summary: Meeting Notes Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                subtitle: const Text('Generated yesterday • 120 words'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History item loaded! 📜')));
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showAiOptionsMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.0))),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('AI Assistant Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: const Icon(Icons.key_rounded, color: Color(0xFF7C3AED)),
-                title: const Text('Gemini API Key Settings'),
-                subtitle: const Text('View or update Google Gemini API Key'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
-                title: const Text('Clear AI History', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('AI History Cleared 🧹')));
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // 5. "Try these examples" Section
-  // ─────────────────────────────────────────────
+  // ── 5. "Try these examples" Section ──
 
   Widget _buildExamplePromptsSection() {
     return Column(
@@ -1226,30 +1172,74 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Text Area
-              TextField(
-                controller: _promptController,
-                maxLines: 3,
-                minLines: 2,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF150D33),
-                ),
-                decoration: const InputDecoration(
-                  hintText: 'Ask anything about your note...',
-                  hintStyle: TextStyle(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFA8A4C6),
+              // Prompt TextField Row with Left Mic Button
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Mic Button for Voice Dictation
+                  GestureDetector(
+                    onTap: () {
+                      SpeechToTextService.listenAndDictate(
+                        context: context,
+                        title: 'AI Prompt Dictation',
+                        onTextRecognized: (text) {
+                          setState(() {
+                            _promptController.text = _promptController.text.trim().isEmpty
+                                ? text
+                                : '${_promptController.text} $text';
+                          });
+                        },
+                      );
+                    },
+                    child: Container(
+                      width: 36.0,
+                      height: 36.0,
+                      margin: const EdgeInsets.only(top: 2.0, right: 8.0),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3EDFF),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
+                            blurRadius: 6.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.mic_rounded, size: 19.0, color: Color(0xFF7C3AED)),
+                      ),
+                    ),
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
-                ),
+
+                  // Text Area
+                  Expanded(
+                    child: TextField(
+                      controller: _promptController,
+                      maxLines: 3,
+                      minLines: 1,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF150D33),
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Ask AI anything or tap mic to speak...',
+                        hintStyle: TextStyle(
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFA8A4C6),
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10.0),
 
-              // Bottom Action Dock Row: Clip, Mic, Gallery + Send Button
+              // Bottom Action Dock Row: Clip & Gallery Attachments + Send Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1293,27 +1283,6 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
                           );
                         },
                         icon: const Icon(Icons.attach_file_rounded,
-                            size: 20.0, color: Color(0xFF7C3AED)),
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(6.0),
-                      ),
-                      const SizedBox(width: 4.0),
-                      // Mic Icon
-                      IconButton(
-                        onPressed: () {
-                          SpeechToTextService.listenAndDictate(
-                            context: context,
-                            title: 'AI Prompt Dictation',
-                            onTextRecognized: (text) {
-                              setState(() {
-                                _promptController.text = _promptController.text.trim().isEmpty
-                                    ? text
-                                    : '${_promptController.text} $text';
-                              });
-                            },
-                          );
-                        },
-                        icon: const Icon(Icons.mic_rounded,
                             size: 20.0, color: Color(0xFF7C3AED)),
                         constraints: const BoxConstraints(),
                         padding: const EdgeInsets.all(6.0),
@@ -1517,83 +1486,272 @@ class _AiAssistantScreenState extends State<AiAssistantScreen>
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(navItems.length, (index) {
           final isSelected = _currentBottomNavIndex == index;
           final item = navItems[index];
 
           if (isSelected) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3EDFF),
-                borderRadius: BorderRadius.circular(18.0),
-              ),
-              child: Row(
-                children: [
-                  Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
-                  const SizedBox(width: 6.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF7C3AED),
+            return Flexible(
+              flex: 3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3EDFF),
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
+                    const SizedBox(width: 4.0),
+                    Flexible(
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF7C3AED),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
 
-          return InkWell(
-            onTap: () {
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
-              } else if (index == 1 || index == 3) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                );
-              } else if (index == 4) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-              } else {
-                setState(() {
-                  _currentBottomNavIndex = index;
-                });
-              }
-            },
-            borderRadius: BorderRadius.circular(16.0),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    size: 20.0,
-                    color: const Color(0xFF9C98B6),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF9C98B6),
+          return Flexible(
+            flex: 2,
+            child: InkWell(
+              onTap: () {
+                if (index == 0) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                } else if (index == 1 || index == 3) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                  );
+                } else if (index == 4) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                } else {
+                  setState(() {
+                    _currentBottomNavIndex = index;
+                  });
+                }
+              },
+              borderRadius: BorderRadius.circular(16.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      size: 20.0,
+                      color: const Color(0xFF9C98B6),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2.0),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF9C98B6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }),
+      ),
+    );
+  }
+
+  void _showAiHistoryModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.history_rounded, color: Color(0xFF7C3AED), size: 22),
+                      SizedBox(width: 8),
+                      Text('AI Prompt History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF8C88A6)),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ..._recentHistory.map((h) => ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: h.iconBg, borderRadius: BorderRadius.circular(10)),
+                  child: Icon(h.icon, color: h.iconColor, size: 18),
+                ),
+                title: Text(h.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF150D33))),
+                subtitle: Text(h.timeStr, style: const TextStyle(fontSize: 11, color: Color(0xFF8C88A6))),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  setState(() => _promptController.text = h.title);
+                },
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAiOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDD5FA), borderRadius: BorderRadius.circular(4))),
+              const SizedBox(height: 16),
+              const Text('AI Assistant Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+              const SizedBox(height: 16),
+
+              ListTile(
+                leading: const Icon(Icons.tune_rounded, color: Color(0xFF7C3AED)),
+                title: const Text('Customize AI Tools', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Pin & arrange your favorite AI tools'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showCustomizeAiToolsModal();
+                },
+              ),
+
+              ListTile(
+                leading: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
+                title: const Text('Clear AI History', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                subtitle: const Text('Remove all stored prompt history'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  AudioHapticService.playButtonSound();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('AI History cleared cleanly! 🧹')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCustomizeAiToolsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.75,
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Customize AI Tools', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                        IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.pop(ctx)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Toggle & pin your favorite AI tools on the Home & AI screens:', style: TextStyle(fontSize: 12, color: Color(0xFF6E6A8A))),
+                    const SizedBox(height: 14),
+                    Expanded(
+                      child: ListView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: _aiTools.length,
+                        itemBuilder: (context, index) {
+                          final tool = _aiTools[index];
+                          final isEnabled = _enabledToolIds.contains(tool.id);
+                          return CheckboxListTile(
+                            value: isEnabled,
+                            activeColor: const Color(0xFF7C3AED),
+                            title: Text(tool.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text(tool.subtitle, style: const TextStyle(fontSize: 11)),
+                            onChanged: (bool? val) {
+                              AudioHapticService.playButtonSound();
+                              setModalState(() {
+                                if (val == true) {
+                                  _enabledToolIds.add(tool.id);
+                                } else {
+                                  if (_enabledToolIds.length > 1) {
+                                    _enabledToolIds.remove(tool.id);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('At least 1 AI tool must remain enabled!')),
+                                    );
+                                  }
+                                }
+                              });
+                              setState(() {});
+                              _settingsRepo.setEnabledAiTools(_enabledToolIds.toList());
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

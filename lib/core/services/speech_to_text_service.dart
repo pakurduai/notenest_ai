@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
+import 'audio_haptic_service.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/notes/presentation/screens/create_note_screen.dart';
@@ -9,7 +11,7 @@ import '../../features/categories/presentation/screens/categories_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/trash_screen.dart';
 
-/// Unified Speech-to-Text service for NoteNest AI
+/// Unified Speech-to-Text & Voice Command Navigation Service for NoteNest AI
 class SpeechToTextService {
   static final SpeechToTextService _instance = SpeechToTextService._internal();
   factory SpeechToTextService() => _instance;
@@ -18,17 +20,26 @@ class SpeechToTextService {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isInitialized = false;
 
-  /// Launch voice recognition modal and send recognized text to callback
+  /// Launch voice recognition modal and send recognized/edited text to callback
   static Future<void> listenAndDictate({
     required BuildContext context,
     required Function(String text) onTextRecognized,
-    String title = 'Voice Dictation',
+    String title = 'Voice Command & Dictation',
   }) async {
-    // Request microphone permission first
-    final status = await Permission.microphone.request();
-    if (!status.isGranted && context.mounted) {
-      _showFallbackTextInput(context, onTextRecognized, title: title, message: 'Microphone permission was not granted. Type or speak below:');
-      return;
+    AudioHapticService.playButtonSound();
+
+    // On web, skip permission_handler (not supported) and go straight to STT
+    if (!kIsWeb) {
+      final status = await Permission.microphone.request();
+      if (!status.isGranted && context.mounted) {
+        _showFallbackTextInput(
+          context,
+          onTextRecognized,
+          title: title,
+          message: 'Microphone permission was not granted. Type or speak command below:',
+        );
+        return;
+      }
     }
 
     final instance = SpeechToTextService();
@@ -46,8 +57,15 @@ class SpeechToTextService {
     if (!context.mounted) return;
 
     if (!instance._isInitialized) {
-      // Speech recognition engine not available (e.g. emulator without Google Speech API)
-      _showFallbackTextInput(context, onTextRecognized, title: title, message: 'Voice engine ready. Enter or dictate text below:');
+      // On web or when STT not available, show manual text input
+      _showFallbackTextInput(
+        context,
+        onTextRecognized,
+        title: title,
+        message: kIsWeb
+            ? 'Voice typing: type your prompt or command below:'
+            : 'Voice engine ready. Enter or dictate command below:',
+      );
       return;
     }
 
@@ -115,15 +133,11 @@ class SpeechToTextService {
               maxLines: 3,
               style: const TextStyle(fontSize: 14, color: Color(0xFF150D33)),
               decoration: InputDecoration(
-                hintText: 'Speak or type text here...',
+                hintText: 'Speak or type command (e.g. "home page open karo", "create note")...',
                 hintStyle: const TextStyle(color: Color(0xFF9E9AC0)),
                 fillColor: const Color(0xFFF7F6FA),
                 filled: true,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFFECE9F6)),
-                ),
-                enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: const BorderSide(color: Color(0xFFECE9F6)),
                 ),
@@ -149,11 +163,12 @@ class SpeechToTextService {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
                   icon: const Icon(Icons.check_rounded, color: Colors.white, size: 18),
-                  label: const Text('Insert Text', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  label: const Text('Execute Command', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   onPressed: () {
                     final text = controller.text.trim();
                     if (text.isNotEmpty) {
                       onTextRecognized(text);
+                      performVoiceNavigation(context, text);
                     }
                     Navigator.pop(ctx);
                   },
@@ -164,6 +179,65 @@ class SpeechToTextService {
         ),
       ),
     );
+  }
+
+  /// Global Multilingual Voice Navigation Handler
+  /// Matches voice commands in English, Urdu, Roman Urdu, Hindi, Spanish etc.
+  static bool performVoiceNavigation(BuildContext context, String text) {
+    final lower = text.toLowerCase().trim();
+
+    if (lower.contains('home') || lower.contains('main') || lower.contains('ہوم') || lower.contains('home page')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Home Screen... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      return true;
+    } else if (lower.contains('create') || lower.contains('new note') || lower.contains('write') || lower.contains('likho') || lower.contains('banao') || lower.contains('نیا نوٹ') || lower.contains('نوٹ')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening New Note Editor... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateNoteScreen()));
+      return true;
+    } else if (lower.contains('search') || lower.contains('find') || lower.contains('dhoondo') || lower.contains('تلاش') || lower.contains('سرچ')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Search Screen... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+      return true;
+    } else if (lower.contains('ai') || lower.contains('assistant') || lower.contains('robot') || lower.contains('gemini') || lower.contains('ای آئی') || lower.contains('اسسٹنٹ')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening AI Assistant... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const AiAssistantScreen()));
+      return true;
+    } else if (lower.contains('category') || lower.contains('categories') || lower.contains('folder') || lower.contains('اقسام') || lower.contains('کیٹیگری')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Categories... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoriesScreen()));
+      return true;
+    } else if (lower.contains('setting') || lower.contains('settings') || lower.contains('tarseem') || lower.contains('سیٹنگز')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Settings... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+      return true;
+    } else if (lower.contains('trash') || lower.contains('deleted') || lower.contains('bin') || lower.contains('تریاش') || lower.contains('ڈیلیٹ')) {
+      AudioHapticService.playNavigationSound();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Opening Trash... 🎙️'), backgroundColor: Color(0xFF7C3AED), duration: Duration(seconds: 1)),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen()));
+      return true;
+    }
+
+    return false;
   }
 }
 
@@ -185,26 +259,32 @@ class _SpeechListeningBottomSheet extends StatefulWidget {
 class _SpeechListeningBottomSheetState extends State<_SpeechListeningBottomSheet>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
-  String _recognizedWords = '';
+  late TextEditingController _textController;
   bool _isListening = false;
 
   @override
   void initState() {
     super.initState();
+    _textController = TextEditingController();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
 
     _startListening();
   }
 
   void _startListening() async {
-    setState(() => _isListening = true);
+    AudioHapticService.playButtonSound();
+    if (mounted) setState(() => _isListening = true);
     await widget.speech.listen(
       onResult: (result) {
+        if (!mounted) return;
         setState(() {
-          _recognizedWords = result.recognizedWords;
+          _textController.text = result.recognizedWords;
+          _textController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _textController.text.length),
+          );
         });
       },
     );
@@ -212,224 +292,216 @@ class _SpeechListeningBottomSheetState extends State<_SpeechListeningBottomSheet
 
   void _stopListening() async {
     await widget.speech.stop();
-    setState(() => _isListening = false);
-  }
-
-  void _checkAndPerformVoiceNavigation(BuildContext context, String text) {
-    final lower = text.toLowerCase().trim();
-
-    if (lower.contains('search') || lower.contains('find') || lower.contains('dhoondo') || lower.contains('سرچ')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening Search Screen... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
-    } else if (lower.contains('home') || lower.contains('main') || lower.contains('ہوم')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening Home Screen... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-    } else if (lower.contains('create') || lower.contains('new note') || lower.contains('write') || lower.contains('likho') || lower.contains('نیا نوٹ')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening New Note Editor... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateNoteScreen()));
-    } else if (lower.contains('ai') || lower.contains('assistant') || lower.contains('robot') || lower.contains('gemini') || lower.contains('ای آئی')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening AI Assistant... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const AiAssistantScreen()));
-    } else if (lower.contains('category') || lower.contains('categories') || lower.contains('folder') || lower.contains('اقسام')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening Categories... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoriesScreen()));
-    } else if (lower.contains('setting') || lower.contains('settings') || lower.contains('tarseem') || lower.contains('سیٹنگز')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening Settings... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-    } else if (lower.contains('trash') || lower.contains('deleted') || lower.contains('bin') || lower.contains('تریاش')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Opening Trash... 🎙️'), backgroundColor: Color(0xFF7C3AED)),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashScreen()));
-    }
+    if (mounted) setState(() => _isListening = false);
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _textController.dispose();
     widget.speech.stop();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28.0)),
       ),
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 20.0 + bottomInset),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Top Bar Indicator
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFDDD5FA),
-                borderRadius: BorderRadius.circular(4),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top Bar Handle Indicator
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDD5FA),
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            Text(
-              widget.title,
-              style: const TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF150D33),
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF150D33),
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _isListening ? 'Listening... Speak now 🎙️' : 'Speech recognized',
-              style: const TextStyle(fontSize: 13.0, color: Color(0xFF6E6A8A), fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 4),
+              Text(
+                _isListening
+                    ? 'Listening... Speak in any language 🎙️'
+                    : 'Tap Mic to speak or edit text below',
+                style: const TextStyle(fontSize: 13.0, color: Color(0xFF6E6A8A), fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 20),
 
-            // Pulsing Mic Waves Graphic
-            AnimatedBuilder(
-              animation: _animController,
-              builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 90 + (_animController.value * 24),
-                      height: 90 + (_animController.value * 24),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.15 - (_animController.value * 0.1)),
-                      ),
-                    ),
-                    Container(
-                      width: 76 + (_animController.value * 12),
-                      height: 76 + (_animController.value * 12),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.3 - (_animController.value * 0.15)),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        if (_isListening) {
-                          _stopListening();
-                        } else {
-                          _startListening();
-                        }
-                      },
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
+              // Interactive Pulsing Mic Graphic Button
+              AnimatedBuilder(
+                animation: _animController,
+                builder: (context, child) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (_isListening) ...[
+                        Container(
+                          width: 86 + (_animController.value * 20),
+                          height: 86 + (_animController.value * 20),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.15 - (_animController.value * 0.1)),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x407C3AED),
-                              blurRadius: 12,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
                         ),
-                        child: Icon(
-                          _isListening ? Icons.mic_rounded : Icons.mic_off_rounded,
-                          color: Colors.white,
-                          size: 32,
+                        Container(
+                          width: 72 + (_animController.value * 10),
+                          height: 72 + (_animController.value * 10),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.3 - (_animController.value * 0.15)),
+                          ),
+                        ),
+                      ],
+                      GestureDetector(
+                        onTap: () {
+                          AudioHapticService.playButtonSound();
+                          if (_isListening) {
+                            _stopListening();
+                          } else {
+                            _startListening();
+                          }
+                        },
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.mic_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Real-time Text Card Box
-            Container(
-              width: double.infinity,
-              constraints: const BoxConstraints(minHeight: 80, maxHeight: 140),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F6FA),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFECE9F6)),
+                    ],
+                  );
+                },
               ),
-              child: SingleChildScrollView(
-                child: Text(
-                  _recognizedWords.isNotEmpty
-                      ? _recognizedWords
-                      : 'Your spoken words will appear here in real-time...',
-                  style: TextStyle(
+              const SizedBox(height: 20),
+
+              // Live Editable Text Field (User can both speak AND edit/type directly!)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F6FA),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFECE9F6)),
+                ),
+                child: TextField(
+                  controller: _textController,
+                  maxLines: 3,
+                  style: const TextStyle(
                     fontSize: 14.5,
                     height: 1.4,
-                    color: _recognizedWords.isNotEmpty
-                        ? const Color(0xFF150D33)
-                        : const Color(0xFF9E9AC0),
-                    fontWeight: _recognizedWords.isNotEmpty ? FontWeight.w600 : FontWeight.normal,
+                    color: Color(0xFF150D33),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: 'Spoken command or text will appear here. You can also edit or type manually...',
+                    hintStyle: TextStyle(
+                      fontSize: 13.5,
+                      color: Color(0xFF9E9AC0),
+                      fontWeight: FontWeight.normal,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
+              // Action Buttons Row: Cancel, Clear, Done
+              Row(
+                children: [
+                  OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       side: const BorderSide(color: Color(0xFFDDD5FA)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     onPressed: () {
+                      AudioHapticService.playButtonSound();
                       _stopListening();
                       Navigator.pop(context);
                     },
                     child: const Text('Cancel', style: TextStyle(color: Color(0xFF6E6A8A), fontWeight: FontWeight.bold)),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: const Color(0xFF7C3AED),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 3,
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      side: const BorderSide(color: Color(0xFFDDD5FA)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     onPressed: () {
-                      _stopListening();
-                      final text = _recognizedWords.trim();
-                      if (text.isNotEmpty) {
-                        widget.onTextRecognized(text);
-                        _checkAndPerformVoiceNavigation(context, text);
-                      }
-                      Navigator.pop(context);
+                      AudioHapticService.playButtonSound();
+                      setState(() {
+                        _textController.clear();
+                      });
                     },
-                    child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    child: const Text('Clear', style: TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.bold)),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: const Color(0xFF7C3AED),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 3,
+                      ),
+                      onPressed: () {
+                        AudioHapticService.playButtonSound();
+                        _stopListening();
+                        final text = _textController.text.trim();
+                        if (text.isNotEmpty) {
+                          widget.onTextRecognized(text);
+                          final handled = SpeechToTextService.performVoiceNavigation(context, text);
+                          if (!handled) {
+                            Navigator.pop(context);
+                          }
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

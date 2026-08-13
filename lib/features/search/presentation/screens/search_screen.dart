@@ -183,14 +183,15 @@ class _SearchScreenState extends State<SearchScreen>
             ),
           ),
 
-          // Floating Bottom Navigation Bar (Consistent across all screens)
-          Positioned(
-            left: 16.0,
-            right: 16.0,
-            bottom: bottomPadding + 12.0,
-            child: _buildBottomNavigationBar(),
+          Padding(
+            padding: EdgeInsets.only(bottom: bottomPadding + 8.0),
+            child: const SizedBox(),
           ),
         ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, bottomPadding + 8.0),
+        child: _buildBottomNavigationBar(),
       ),
     );
   }
@@ -550,108 +551,117 @@ class _SearchScreenState extends State<SearchScreen>
           ),
           const SizedBox(height: 12.0),
 
-          // Color Palette Selection Row (Evenly Spaced Circles Across Card Width)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // 'All' Circle
-              GestureDetector(
-                onTap: () => setState(() => _selectedColorIndex = 0),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 30.0,
-                      height: 30.0,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF7C3AED),
-                          width: 2.0,
-                        ),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 12.0,
-                          height: 12.0,
+          // Color Palette Selection Row (Scrollable Horizontal Circles)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                // 'All' Circle
+                GestureDetector(
+                  onTap: () => setState(() => _selectedColorIndex = 0),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 30.0,
+                          height: 30.0,
                           decoration: BoxDecoration(
-                            color: _selectedColorIndex == 0
-                                ? const Color(0xFF7C3AED)
-                                : Colors.transparent,
                             shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF7C3AED),
+                              width: 2.0,
+                            ),
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 12.0,
+                              height: 12.0,
+                              decoration: BoxDecoration(
+                                color: _selectedColorIndex == 0
+                                    ? const Color(0xFF7C3AED)
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 3.0),
-                    const Text(
-                      'All',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF7C3AED),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Solid Color Circles (Evenly spaced across card)
-              ...List.generate(_filterColors.length, (index) {
-                final color = _filterColors[index];
-                final isSelected = _selectedColorIndex == index + 1;
-                return GestureDetector(
-                  onTap: () {
-                    AudioHapticService.playButtonSound();
-                    setState(() => _selectedColorIndex = index + 1);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 30.0,
-                    height: 30.0,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: isSelected
-                          ? Border.all(color: const Color(0xFF7C3AED), width: 2.5)
-                          : Border.all(color: Colors.white, width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.35),
-                          blurRadius: isSelected ? 8.0 : 4.0,
-                          offset: const Offset(0, 2),
+                        const SizedBox(height: 3.0),
+                        const Text(
+                          'All',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF7C3AED),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                );
-              }),
-
-              // Custom Color Creator Plus Button (+)
-              GestureDetector(
-                onTap: () {
-                  AudioHapticService.playButtonSound();
-                  CustomColorPickerModal.show(
-                    context,
-                    onColorSelected: (newColor) {
-                      setState(() {
-                        _filterColors.add(newColor);
-                        _selectedColorIndex = _filterColors.length;
-                      });
-                    },
-                  );
-                },
-                child: Container(
-                  width: 30.0,
-                  height: 30.0,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3EDFF),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF7C3AED), width: 1.5),
-                  ),
-                  child: const Icon(Icons.add, color: Color(0xFF7C3AED), size: 18),
                 ),
-              ),
-            ],
+
+                // Solid Color Circles (Scrollable)
+                ...List.generate(_filterColors.length, (index) {
+                  final color = _filterColors[index];
+                  final isSelected = _selectedColorIndex == index + 1;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        AudioHapticService.playButtonSound();
+                        setState(() => _selectedColorIndex = index + 1);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 30.0,
+                        height: 30.0,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: isSelected
+                              ? Border.all(color: const Color(0xFF7C3AED), width: 2.5)
+                              : Border.all(color: Colors.white, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.35),
+                              blurRadius: isSelected ? 8.0 : 4.0,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+                // Custom Color Creator Plus Button (+)
+                GestureDetector(
+                  onTap: () {
+                    AudioHapticService.playButtonSound();
+                    CustomColorPickerModal.show(
+                      context,
+                      onColorSelected: (newColor) {
+                        setState(() {
+                          _filterColors.add(newColor);
+                          _selectedColorIndex = _filterColors.length;
+                        });
+                      },
+                    );
+                  },
+                  child: Container(
+                    width: 30.0,
+                    height: 30.0,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3EDFF),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFF7C3AED), width: 1.5),
+                    ),
+                    child: const Icon(Icons.add, color: Color(0xFF7C3AED), size: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -776,7 +786,7 @@ class _SearchScreenState extends State<SearchScreen>
   Widget _buildAiSmartSearchCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.0),
         gradient: const LinearGradient(
@@ -797,8 +807,8 @@ class _SearchScreenState extends State<SearchScreen>
         children: [
           // Left Seamless Transparent 3D Robot Mascot Asset
           Container(
-            width: 54.0,
-            height: 54.0,
+            width: 42.0,
+            height: 42.0,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
@@ -812,19 +822,25 @@ class _SearchScreenState extends State<SearchScreen>
             ),
             child: Center(
               child: Image.asset(
-                'assets/images/home_robot.png',
-                width: 48.0,
-                height: 48.0,
+                'assets/images/energetic_robot_clean.png',
+                width: 36.0,
+                height: 36.0,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Icon(
-                  Icons.smart_toy_rounded,
-                  size: 28.0,
-                  color: Color(0xFF7C3AED),
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  'assets/images/home_robot.png',
+                  width: 36.0,
+                  height: 36.0,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.smart_toy_rounded,
+                    size: 24.0,
+                    color: Color(0xFF7C3AED),
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 10.0),
+          const SizedBox(width: 8.0),
 
           // Content Column
           const Expanded(
@@ -836,28 +852,32 @@ class _SearchScreenState extends State<SearchScreen>
                     Text(
                       'AI Smart Search',
                       style: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF150D33),
                       ),
                     ),
                     SizedBox(width: 3.0),
-                    Icon(Icons.auto_awesome, size: 13.0, color: Color(0xFF7C3AED)),
+                    Icon(Icons.auto_awesome, size: 12.0, color: Color(0xFF7C3AED)),
                   ],
                 ),
                 SizedBox(height: 2.0),
                 Text(
                   'Try natural language search',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.0,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF6E6A8A),
                   ),
                 ),
                 Text(
-                  '"Show my work notes from last week"',
+                  '"Show my work notes"',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10.0,
+                    fontSize: 9.5,
                     fontStyle: FontStyle.italic,
                     color: Color(0xFF8C88A6),
                   ),
@@ -865,6 +885,7 @@ class _SearchScreenState extends State<SearchScreen>
               ],
             ),
           ),
+          const SizedBox(width: 4.0),
 
           // Try Now Button
           Material(
@@ -878,7 +899,7 @@ class _SearchScreenState extends State<SearchScreen>
               },
               borderRadius: BorderRadius.circular(16.0),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 7.0),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
                   gradient: const LinearGradient(
@@ -895,16 +916,16 @@ class _SearchScreenState extends State<SearchScreen>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, color: Colors.white, size: 12.0),
-                    SizedBox(width: 3.0),
                     Text(
                       'Try Now',
                       style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    SizedBox(width: 2.0),
+                    Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 11.0),
                   ],
                 ),
               ),
@@ -1140,81 +1161,98 @@ class _SearchScreenState extends State<SearchScreen>
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(navItems.length, (index) {
           final isSelected = index == 1; // Search tab is selected
           final item = navItems[index];
 
           if (isSelected) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3EDFF),
-                borderRadius: BorderRadius.circular(18.0),
-              ),
-              child: Row(
-                children: [
-                  Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
-                  const SizedBox(width: 6.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF7C3AED),
+            return Flexible(
+              flex: 3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3EDFF),
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
+                    const SizedBox(width: 4.0),
+                    Flexible(
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF7C3AED),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
 
-          return InkWell(
-            onTap: () {
-              AudioHapticService.playButtonSound();
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
-              } else if (index == 2) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
-                );
-              } else if (index == 3) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                );
-              } else if (index == 4) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-              }
-            },
-            borderRadius: BorderRadius.circular(16.0),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    size: 20.0,
-                    color: const Color(0xFF9C98B6),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF9C98B6),
+          return Flexible(
+            flex: 2,
+            child: InkWell(
+              onTap: () {
+                AudioHapticService.playButtonSound();
+                if (index == 0) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                } else if (index == 2) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
+                  );
+                } else if (index == 3) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                  );
+                } else if (index == 4) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                }
+              },
+              borderRadius: BorderRadius.circular(16.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      size: 20.0,
+                      color: const Color(0xFF9C98B6),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2.0),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF9C98B6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

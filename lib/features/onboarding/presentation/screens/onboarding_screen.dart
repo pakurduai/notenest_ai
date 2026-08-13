@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../widgets/onboarding_page.dart';
 import '../../../../core/services/audio_haptic_service.dart';
@@ -17,7 +15,6 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  Timer? _autoForwardTimer;
 
   static const List<String> _onboardingImages = [
     'assets/images/onboarding_screen_1.png',
@@ -29,37 +26,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     AudioHapticService.playNavigationSound();
-    // System UI overlay configuration for edge-to-edge full-screen display
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    // Auto-forward timer: advance page every 2.0 seconds automatically
-    _startAutoForwardTimer();
-  }
-
-  void _startAutoForwardTimer() {
-    _autoForwardTimer?.cancel();
-    _autoForwardTimer = Timer.periodic(const Duration(milliseconds: 2000), (timer) {
-      if (!mounted) return;
-      if (_currentPage < _onboardingImages.length - 1) {
-        _onNext();
-      } else {
-        timer.cancel();
-        _navigateToHome();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _autoForwardTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -67,10 +37,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _onNext() {
     AudioHapticService.playButtonSound();
     if (_currentPage < _onboardingImages.length - 1) {
-      _pageController.animateToPage(
-        _currentPage + 1,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOutCubic,
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
       );
     } else {
       _navigateToHome();
@@ -85,19 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _navigateToHome() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOutCubic,
-          ),
-          child: child,
-        ),
-        transitionDuration: const Duration(milliseconds: 450),
-      ),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
@@ -110,7 +67,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         itemCount: _onboardingImages.length,
         physics: const BouncingScrollPhysics(),
         onPageChanged: (index) {
-          setState(() => _currentPage = index);
+          if (mounted) {
+            AudioHapticService.playButtonSound();
+            setState(() => _currentPage = index);
+          }
         },
         itemBuilder: (context, index) {
           return OnboardingPage(

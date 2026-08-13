@@ -47,6 +47,7 @@ class _AmbientBackgroundGlowWidgetState extends State<AmbientBackgroundGlowWidge
 
     return AnimatedBuilder(
       animation: _controller,
+      child: widget.child,
       builder: (context, child) {
         final animValue = _controller.value;
         return Stack(
@@ -118,7 +119,7 @@ class _AmbientBackgroundGlowWidgetState extends State<AmbientBackgroundGlowWidge
             ),
 
             // Foreground Content
-            widget.child,
+            if (child != null) child,
           ],
         );
       },

@@ -1,30 +1,45 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/app_theme.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
-
 import 'core/database/hive_database_service.dart';
-import 'core/services/ad_service.dart';
+import 'core/services/app_language_service.dart';
+import 'core/services/pro_subscription_service.dart';
+import 'core/services/play_billing_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive Database for persistent local storage
-  await HiveDatabaseService.init();
+  try {
+    await HiveDatabaseService.init();
+    AppLanguageService.init();
+    ProSubscriptionService.init();
+  } catch (e) {
+    debugPrint('Hive init exception: $e');
+  }
 
-  // Initialize Google Mobile Ads SDK
-  await AdService.instance.init();
+  // Initialize Google Play Billing API service
+  if (!kIsWeb) {
+    try {
+      await PlayBillingService.init();
+    } catch (_) {}
+  }
 
-  // Configure Edge-to-Edge System UI Mode globally
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
+  if (!kIsWeb) {
+    try {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
+      );
+    } catch (_) {}
+  }
 
   runApp(const NoteNestApp());
 }
@@ -35,13 +50,18 @@ class NoteNestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NoteNest AI',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
-      home: const SplashScreen(),
+    return ValueListenableBuilder<String>(
+      valueListenable: AppLanguageService.currentLanguageNotifier,
+      builder: (context, currentLang, child) {
+        return MaterialApp(
+          title: 'NoteNest AI',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.light,
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

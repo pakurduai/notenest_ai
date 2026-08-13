@@ -1,7 +1,7 @@
 name: notenest_ai
 description: "NoteNest - Smart Notes. Smarter Ideas."
 publish_to: 'none'
-version: 1.0.8+9
+version: 1.0.9+10
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -16,8 +16,10 @@ dependencies:
   speech_to_text: ^7.0.0
   permission_handler: ^11.3.1
   path_provider: ^2.1.4
-  google_mobile_ads: ^5.1.0
+
   http: ^1.2.0
+  in_app_purchase: ^3.2.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -30,17 +32,13 @@ flutter_launcher_icons:
   ios: false
   image_path: "assets/playstore/icon_512.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#7C3AED"
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/playstore/adaptive_foreground.png"
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/branding/app_icon.png
-    - assets/branding/full_logo.png
-    - assets/branding/monogram.png
-    - assets/images/splash_screen_v2.png
-    - assets/images/onboarding_screen_1.png
-    - assets/images/onboarding_screen_2.png
+    - assets/branding/
     - assets/images/
+    - assets/playstore/

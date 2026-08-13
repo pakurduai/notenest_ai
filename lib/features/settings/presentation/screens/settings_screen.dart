@@ -10,6 +10,8 @@ import 'trash_screen.dart';
 import '../../../../core/services/audio_haptic_service.dart';
 import '../../../../core/services/flashlight_service.dart';
 import '../../../../core/widgets/ambient_background_glow_widget.dart';
+import '../../../../core/services/app_language_service.dart';
+import '../../../../core/services/pro_subscription_service.dart';
 
 /// Settings Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference.
@@ -27,9 +29,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   late final Animation<Offset> _slideAnimation;
 
   int _currentBottomNavIndex = 4; // 'Settings' active tab
+  String _selectedLanguage = 'English (US)';
 
-  final List<SettingsItemModel> _appPreferences = const [
-    SettingsItemModel(
+  List<SettingsItemModel> get _appPreferences => [
+    const SettingsItemModel(
       id: 'appearance',
       title: 'Appearance',
       subtitle: 'Choose theme, colors and font size',
@@ -37,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       iconBg: Color(0xFFF3EDFF),
       iconColor: Color(0xFF7C3AED),
     ),
-    SettingsItemModel(
+    const SettingsItemModel(
       id: 'notifications',
       title: 'Notifications',
       subtitle: 'Manage reminders and notifications',
@@ -45,7 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       iconBg: Color(0xFFDCFCE7),
       iconColor: Color(0xFF10B981),
     ),
-    SettingsItemModel(
+    const SettingsItemModel(
       id: 'privacy',
       title: 'Privacy & Security',
       subtitle: 'App lock, privacy and security settings',
@@ -53,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       iconBg: Color(0xFFE0F2FE),
       iconColor: Color(0xFF0284C7),
     ),
-    SettingsItemModel(
+    const SettingsItemModel(
       id: 'backup',
       title: 'Backup & Restore',
       subtitle: 'Backup your notes and restore data',
@@ -66,9 +69,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       title: 'Language',
       subtitle: 'Choose your preferred language',
       icon: Icons.language_rounded,
-      iconBg: Color(0xFFFFEBF2),
-      iconColor: Color(0xFFEC4899),
-      trailingText: 'English',
+      iconBg: const Color(0xFFFFEBF2),
+      iconColor: const Color(0xFFEC4899),
+      trailingText: _selectedLanguage,
     ),
   ];
 
@@ -162,6 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     ));
 
     _animController.forward();
+    _selectedLanguage = AppLanguageService.currentLanguage;
   }
 
   @override
@@ -419,17 +423,20 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16.0),
                 child: Image.asset(
-                  'assets/playstore/icon_512.png',
+                  'assets/branding/app_icon.png',
                   width: 54.0,
                   height: 54.0,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: const Color(0xFF7C3AED),
-                    child: const Center(
-                      child: Text(
-                        'N',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
-                      ),
+                  errorBuilder: (_, __, ___) => Image.asset(
+                    'assets/playstore/icon_512.png',
+                    width: 54.0,
+                    height: 54.0,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      'assets/branding/monogram.png',
+                      width: 54.0,
+                      height: 54.0,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -456,20 +463,25 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                     ),
                     const SizedBox(width: 6.0),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 2.0),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0EBFB),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: const Text(
-                        'Free Plan',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF7C3AED),
-                        ),
-                      ),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: ProSubscriptionService.isProNotifier,
+                      builder: (context, isPro, _) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 2.0),
+                          decoration: BoxDecoration(
+                            color: isPro ? const Color(0xFFDCFCE7) : const Color(0xFFF0EBFB),
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Text(
+                            isPro ? '✨ PRO Active' : 'Free Plan',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              color: isPro ? const Color(0xFF10B981) : const Color(0xFF7C3AED),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -529,76 +541,89 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12.0),
 
             // Right "Upgrade to Pro" Card Box (Royal Crown Reference Match)
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProUpgradeScreen()),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 9.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15.0),
-                  border: Border.all(color: const Color(0xFFEDE9F6)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF7C3AED).withValues(alpha: 0.05),
-                      blurRadius: 8.0,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Royal Crown Icon Box
-                    Container(
-                      width: 32.0,
-                      height: 32.0,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0EBFB),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: const Center(
-                        child: CustomPaint(
-                          size: Size(18.0, 16.0),
-                          painter: ProCrownPainter(color: Color(0xFF7C3AED)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Upgrade to Pro',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF7C3AED),
-                          ),
-                        ),
-                        SizedBox(height: 1.0),
-                        Text(
-                          'Unlock all premium features',
-                          style: TextStyle(
-                            fontSize: 9.0,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF8C88A6),
-                          ),
+            ValueListenableBuilder<bool>(
+              valueListenable: ProSubscriptionService.isProNotifier,
+              builder: (context, isPro, _) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ProUpgradeScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 9.0),
+                    decoration: BoxDecoration(
+                      color: isPro ? const Color(0xFFF0FDF4) : Colors.white,
+                      borderRadius: BorderRadius.circular(15.0),
+                      border: Border.all(color: isPro ? const Color(0xFFBBF7D0) : const Color(0xFFEDE9F6)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isPro
+                              ? const Color(0xFF10B981).withValues(alpha: 0.08)
+                              : const Color(0xFF7C3AED).withValues(alpha: 0.05),
+                          blurRadius: 8.0,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    const SizedBox(width: 4.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Royal Crown Icon Box
+                        Container(
+                          width: 32.0,
+                          height: 32.0,
+                          decoration: BoxDecoration(
+                            color: isPro ? const Color(0xFFDCFCE7) : const Color(0xFFF0EBFB),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          child: Center(
+                            child: CustomPaint(
+                              size: const Size(18.0, 16.0),
+                              painter: ProCrownPainter(
+                                color: isPro ? const Color(0xFF10B981) : const Color(0xFF7C3AED),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8.0),
 
-                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF7C3AED), size: 16.0),
-                  ],
-                ),
-              ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isPro ? '✨ Pro Member' : 'Upgrade to Pro',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: isPro ? const Color(0xFF10B981) : const Color(0xFF7C3AED),
+                              ),
+                            ),
+                            const SizedBox(height: 1.0),
+                            Text(
+                              isPro ? ProSubscriptionService.activePlanTitle : 'Unlock all features',
+                              style: TextStyle(
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.w500,
+                                color: isPro ? const Color(0xFF047857) : const Color(0xFF8C88A6),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 4.0),
+
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: isPro ? const Color(0xFF10B981) : const Color(0xFF7C3AED),
+                          size: 16.0,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -958,37 +983,40 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Appearance & Lighting Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
-                  const SizedBox(height: 14),
-                  SwitchListTile(
-                    value: AmbientBackgroundGlowWidget.isGlowEnabled,
-                    onChanged: (val) {
-                      setModalState(() => AmbientBackgroundGlowWidget.isGlowEnabled = val);
-                      setState(() {});
-                      AudioHapticService.playButtonSound();
-                    },
-                    title: const Text('Ambient Background Glow Lights', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(AmbientBackgroundGlowWidget.isGlowEnabled ? 'ON (Dynamic Gradient Lights)' : 'OFF (Clean Solid Background)'),
-                    activeTrackColor: const Color(0xFF7C3AED),
-                  ),
-                  SwitchListTile(
-                    value: FlashlightService.isFlashlightOn,
-                    onChanged: (val) async {
-                      await FlashlightService.toggleFlashlight(context);
-                      setModalState(() {});
-                      setState(() {});
-                    },
-                    title: const Text('Reading Flashlight / Torch', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(FlashlightService.isFlashlightOn ? 'Torch Turned ON 🔦' : 'Torch OFF'),
-                    activeTrackColor: const Color(0xFF7C3AED),
-                  ),
-                ],
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Appearance & Lighting Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                    const SizedBox(height: 14),
+                    SwitchListTile(
+                      value: AmbientBackgroundGlowWidget.isGlowEnabled,
+                      onChanged: (val) {
+                        setModalState(() => AmbientBackgroundGlowWidget.isGlowEnabled = val);
+                        setState(() {});
+                        AudioHapticService.playButtonSound();
+                      },
+                      title: const Text('Ambient Background Glow Lights', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(AmbientBackgroundGlowWidget.isGlowEnabled ? 'ON (Dynamic Gradient Lights)' : 'OFF (Clean Solid Background)'),
+                      activeTrackColor: const Color(0xFF7C3AED),
+                    ),
+                    SwitchListTile(
+                      value: FlashlightService.isFlashlightOn,
+                      onChanged: (val) async {
+                        await FlashlightService.toggleFlashlight(context);
+                        setModalState(() {});
+                        setState(() {});
+                      },
+                      title: const Text('Reading Flashlight / Torch', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(FlashlightService.isFlashlightOn ? 'Torch Turned ON 🔦' : 'Torch OFF'),
+                      activeTrackColor: const Color(0xFF7C3AED),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -1106,28 +1134,83 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   void _showLanguageModal() {
-    final languages = ['English (US)', 'Spanish (Español)', 'French (Français)', 'German (Deutsch)', 'Urdu (اردو)', 'Hindi (हिंदी)', 'Arabic (العربية)', 'Chinese (中文)'];
+    AudioHapticService.playButtonSound();
+    final languages = [
+      'English (US)',
+      'Spanish (Español)',
+      'French (Français)',
+      'German (Deutsch)',
+      'Urdu (اردو)',
+      'Hindi (हिंदी)',
+      'Arabic (العربية)',
+      'Chinese (中文)',
+    ];
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Select App Language', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return SafeArea(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 12),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDD5FA), borderRadius: BorderRadius.circular(4))),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14.0),
+                    child: Text('Select App Language', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: languages.length,
+                      itemBuilder: (context, index) {
+                        final lang = languages[index];
+                        final isSelected = _selectedLanguage == lang;
+                        return ListTile(
+                          title: Text(
+                            lang,
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                              color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFF150D33),
+                            ),
+                          ),
+                          trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: Color(0xFF7C3AED)) : null,
+                          onTap: () async {
+                            AudioHapticService.playButtonSound();
+                            final messenger = ScaffoldMessenger.of(context);
+                            final nav = Navigator.of(ctx);
+                            await AppLanguageService.setLanguage(lang);
+                            if (!mounted) return;
+                            setState(() {
+                              _selectedLanguage = lang;
+                            });
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('App Language set to $lang! 🌐'),
+                                backgroundColor: const Color(0xFF7C3AED),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                            nav.pop();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
-            ...languages.map((lang) => ListTile(
-              title: Text(lang, style: const TextStyle(fontWeight: FontWeight.w700)),
-              trailing: lang.startsWith('English') ? const Icon(Icons.check_circle_rounded, color: Color(0xFF7C3AED)) : null,
-              onTap: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Language set to $lang')));
-              },
-            )),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1190,12 +1273,17 @@ class _SettingsScreenState extends State<SettingsScreen>
               children: [
                 const Text('Please leave us a rating on Google Play Store!', style: TextStyle(fontSize: 13, color: Color(0xFF6E6A8A))),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (idx) => IconButton(
-                    icon: Icon(idx < selectedRating ? Icons.star_rounded : Icons.star_outline_rounded, color: const Color(0xFFFFB800), size: 36),
-                    onPressed: () => setDialogState(() => selectedRating = idx + 1),
-                  )),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (idx) => IconButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                      constraints: const BoxConstraints(),
+                      icon: Icon(idx < selectedRating ? Icons.star_rounded : Icons.star_outline_rounded, color: const Color(0xFFFFB800), size: 34),
+                      onPressed: () => setDialogState(() => selectedRating = idx + 1),
+                    )),
+                  ),
                 ),
               ],
             ),
@@ -1317,84 +1405,101 @@ class _SettingsScreenState extends State<SettingsScreen>
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(navItems.length, (index) {
           final isSelected = _currentBottomNavIndex == index;
           final item = navItems[index];
 
           if (isSelected) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3EDFF),
-                borderRadius: BorderRadius.circular(18.0),
-              ),
-              child: Row(
-                children: [
-                  Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
-                  const SizedBox(width: 6.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF7C3AED),
+            return Flexible(
+              flex: 3,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3EDFF),
+                  borderRadius: BorderRadius.circular(18.0),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
+                    const SizedBox(width: 4.0),
+                    Flexible(
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF7C3AED),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
 
-          return InkWell(
-            onTap: () {
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
-              } else if (index == 1) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                );
-              } else if (index == 2) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
-                );
-              } else if (index == 3) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                );
-              } else {
-                setState(() {
-                  _currentBottomNavIndex = index;
-                });
-              }
-            },
-            borderRadius: BorderRadius.circular(16.0),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    size: 20.0,
-                    color: const Color(0xFF9C98B6),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    item['label'] as String,
-                    style: const TextStyle(
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF9C98B6),
+          return Flexible(
+            flex: 2,
+            child: InkWell(
+              onTap: () {
+                if (index == 0) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                } else if (index == 1) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  );
+                } else if (index == 2) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
+                  );
+                } else if (index == 3) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                  );
+                } else {
+                  setState(() {
+                    _currentBottomNavIndex = index;
+                  });
+                }
+              },
+              borderRadius: BorderRadius.circular(16.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      size: 20.0,
+                      color: const Color(0xFF9C98B6),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2.0),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item['label'] as String,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF9C98B6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
