@@ -27,7 +27,6 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   late final Animation<Offset> _slideAnimation;
 
   int _selectedCategoryIndex = 0; // 'Work' selected by default
-  int _currentBottomNavIndex = 3; // 'Categories' active tab
 
   final NotesRepository _notesRepo = NotesRepository();
   late final CategoriesRepository _categoriesRepo;
@@ -885,18 +884,17 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   Widget _buildBottomNavigationBar() {
     final navItems = [
       {'label': 'Home', 'icon': Icons.home_rounded},
-      {'label': 'Notes', 'icon': Icons.description_rounded},
-      {'label': 'AI Tools', 'icon': Icons.auto_awesome_rounded},
       {'label': 'Categories', 'icon': Icons.folder_rounded},
-      {'label': 'Profile', 'icon': Icons.person_rounded},
+      {'label': 'AI Assistant', 'icon': Icons.auto_awesome_rounded},
+      {'label': 'Settings', 'icon': Icons.settings_rounded},
     ];
 
     return Container(
       height: 64.0,
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26.0),
+        borderRadius: BorderRadius.circular(28.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -908,78 +906,50 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(navItems.length, (index) {
-          final isSelected = _currentBottomNavIndex == index;
+          final isSelected = index == 1; // Categories active tab
           final item = navItems[index];
 
-          if (isSelected) {
-            return Flexible(
-              flex: 3,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3EDFF),
-                  borderRadius: BorderRadius.circular(18.0),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(item['icon'] as IconData, size: 20.0, color: const Color(0xFF7C3AED)),
-                    const SizedBox(width: 4.0),
-                    Flexible(
-                      child: Text(
-                        item['label'] as String,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF7C3AED),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return Flexible(
-            flex: 2,
+          return Expanded(
             child: InkWell(
               onTap: () {
+                AudioHapticService.playButtonSound();
                 if (index == 0) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const HomeScreen()),
                   );
+                } else if (index == 1) {
+                  // Already on Categories screen
                 } else if (index == 2) {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
                   );
-                } else if (index == 4) {
+                } else if (index == 3) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const SettingsScreen()),
                   );
-                } else {
-                  setState(() {
-                    _currentBottomNavIndex = index;
-                  });
                 }
               },
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: BorderRadius.circular(20.0),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2.0),
+                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      item['icon'] as IconData,
-                      size: 20.0,
-                      color: const Color(0xFF9C98B6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 3.0),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFF3EDFF) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14.0),
+                      ),
+                      child: Icon(
+                        item['icon'] as IconData,
+                        size: 21.0,
+                        color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFF9C98B6),
+                      ),
                     ),
                     const SizedBox(height: 2.0),
                     FittedBox(
@@ -987,10 +957,10 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                       child: Text(
                         item['label'] as String,
                         maxLines: 1,
-                        style: const TextStyle(
-                          fontSize: 10.0,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF9C98B6),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFF6E6A8A),
                         ),
                       ),
                     ),

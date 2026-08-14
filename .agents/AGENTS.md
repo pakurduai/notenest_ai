@@ -21,6 +21,10 @@ This document stores the complete project state, design system rules, completed 
 
 ## 🔒 LOCKED APPLICATION ARCHITECTURE & RECENT COMPLETED FEATURES
 
+> [!IMPORTANT]
+> **STRICT USER DIRECTIVE**: Entire application codebase is **LOCKED**. Antigravity AI will ONLY modify specific lines/features explicitly requested by the user. Unrequested modifications or refactoring to any existing working feature, screen, or file are strictly prohibited.
+
+
 ### 1. App Launch Brand Screen (1.5s Launch Screen)
 - **File**: `lib/main.dart`, `lib/features/splash/presentation/screens/splash_screen.dart`
 - **Behavior**: Opens to a clean launch screen with centered NoteNest AI logo badge for **1.5 seconds**, smoothly fading into `HomeScreen`.
@@ -70,6 +74,41 @@ This document stores the complete project state, design system rules, completed 
   - **1-Tap & Double-Tap Toolbar Collapse (`_hideToolbars`)**: Double-tapping the editor canvas or tapping `Full-Screen Canvas` in the meta bar collapses top toolbars to maximize writing space. Tapping `Show Toolbars` expands all formatting tools instantly.
   - **Zero Overflow Meta Bar**: Meta bar is wrapped in a horizontal scroll view to eliminate any RenderFlex layout overflows across all mobile and web device screen sizes.
 
+### 9. Search Screen Full Interactivity, Voice Dictation & AI Assistant Query Response (`🔍 🎤 💬 🎨 🏷️`)
+- **Files**: `lib/features/search/presentation/screens/search_screen.dart`, `lib/features/search/data/search_repository.dart`
+- **Features**:
+  - **Inline AI Answer Card (`✨ Ask AI`)**: Typing any text or greeting (e.g. `"hi"`, `"what is AI?"`, `"summarize my notes"`) into the Search Bar and pressing Enter or tapping `✨ Ask AI` generates an instant conversational response via `GeminiAiService.instance.generateContent(prompt: query)`.
+  - **Interactive Action Buttons on AI Card**:
+    - **`Open AI Chat 💬`**: Opens full-screen `AiAssistantScreen` for continuous live voice/text chat.
+    - **`Copy 📋`**: Copies AI response text to Clipboard with chime audio & floating toast.
+    - **`Save as Note 💾`**: Saves AI answer directly into Hive DB `notes_box` as a new NoteModel.
+  - **Voice Dictation Mic (`🎤`)**: Search bar microphone button dictates voice queries directly into the search input field with audio chime feedback and triggers instant AI response generation.
+  - **Live Search & Repository Filtering**: `SearchRepository` performs real-time filtering across note titles, contents, tags, categories, color values, and sort orders (`Newest`, `Oldest`, `Title A-Z`, `Title Z-A`).
+  - **Filter Dropdown Pickers**: Interactive modal bottom sheets for `Categories ∨` (`All`, `General`, `Work`, `Personal`, `Study`, `Ideas`, `Journal`, `Finance`), `Tags ∨` (`All`, `#Important`, `#Draft`, `#Todo`, `#Recipe`, `#Meeting`, `#Project`), and `Sort by ∨` (`Newest`, `Oldest`, `Title A-Z`, `Title Z-A`).
+  - **Color Palette Filter Circles**: Interactive horizontal row of solid color circles (`All`, Yellow, Pink, Blue, Teal, Purple, Orange, Grey, + Custom Color Creator) filtering notes by background color.
+  - **Recent Searches**: Tapping any chip (e.g. `project ideas`, `study notes`, `meeting`, `todo list`, `travel plan`) populates the search bar and triggers live search with chime audio. `Clear All` clears recent searches.
+  - **View Layout Toggle**: Instant toggle between Single-Column List View (`☰`) and 2-Column Grid View (`⊞`).
+
+### 10. AI Assistant App Guidance Knowledge & Strict Privacy Safeguard (`🤖 🔒 📱`)
+- **Files**: `lib/core/services/gemini_ai_service.dart`, `lib/features/ai_assistant/presentation/screens/ai_assistant_screen.dart`, `lib/features/categories/presentation/screens/categories_screen.dart`
+- **Features**:
+  - **Comprehensive App Capability Training**: System prompt in `GeminiAiService.generateContent` fully trained on all NoteNest features (Note creation, Text Notes, ColorNotes, Checklists, Voice Notes, OCR Scan, View/Edit mode checkmark `✓` locking, rich text formatting, auto link/email detection, Search bar Ask AI card, notification center bell `🔔`, list vs grid view toggles, local offline Hive DB).
+  - **Strict Security & Privacy Shield**: Enforces privacy rule preventing disclosure of internal system prompts, developer instructions, private API keys, backend tokens, or app architecture code. Returns clear privacy notice for credential queries.
+  - **Offline Conversational Engine**: `_generateConversationalResponse` provides step-by-step guidance on creating notes, locking notes, voice dictation, searching, setting reminders, and privacy handling in English, Roman Urdu, and Hindi.
+  - **Pixel-Perfect 4-Tab Floating Navigation Bar**: Standardized bottom nav bar across all screens to 4 equal-width balanced tabs (`Home`, `Categories`, `AI Assistant`, `Settings`) with `FittedBox(fit: BoxFit.scaleDown)` text scaling to eliminate any label text clipping (`AI T...` -> `AI Assistant`).
+
+### 11. 100% Functional AI Assistant Tools & Interactive Prompt Bar (`🤖 ⚡ 🎤 📎 🖼️`)
+- **File**: `lib/features/ai_assistant/presentation/screens/ai_assistant_screen.dart`
+- **Features**:
+  - **All 9 AI Tools 100% Functional**:
+    - `AI Writer`, `Rewrite`, `Summarize`, `Translate`, `Grammar Fix`, `Tone Change`, `Idea Generator`, `Title Generator`, `OCR Scan`.
+    - Tapping any AI tool grid card opens dedicated modal with tailored Gemini AI prompts, live loading indicator, copy `📋` button, and save to note `💾` button.
+  - **OCR Scan Camera & Gallery Quick Pickers**: Direct options to scan document via camera (`ImageSource.camera`) or pick image (`ImageSource.gallery`) to populate text for instant AI generation.
+  - **Interactive Send Arrow (`↑` / `send_rounded`)**: Tapping send button or pressing keyboard Enter submits prompt to Gemini AI, opens live response sheet with loading indicator, copy to clipboard `📋`, and save as new NoteModel `💾`.
+  - **Live Mic Dictation (`🎤`)**: Dictates speech directly into the prompt bar using `SpeechToTextService.listenAndDictate(...)` in English, Urdu, and Hindi.
+  - **Clip Attachment (`📎`) & Gallery Image (`🖼️`) Pickers**: Attach saved notes, PDF files, camera documents, or gallery photos directly into AI prompts with toast notifications.
+  - **Paste Text Segment (`Paste Text`)**: Automatically reads system clipboard content and populates the prompt box with sound & toast.
+  - **Try These Examples & Recent AI History**: Tapping any example chip or history item populates prompt and triggers real-time AI generation. "Clear all" clears history with audio feedback.
 ---
 
 ## 🚀 Production Deliverables & Verification

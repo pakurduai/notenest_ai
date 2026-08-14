@@ -1,4 +1,27 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+final RegExp _linkRegex = RegExp(
+  r'((https?://[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))',
+  caseSensitive: false,
+);
+
+void _launchLinkUrl(String rawUrl) async {
+  try {
+    Uri? uri;
+    if (rawUrl.contains('@') && !rawUrl.startsWith('http')) {
+      uri = Uri.parse('mailto:$rawUrl');
+    } else if (rawUrl.startsWith('www.')) {
+      uri = Uri.parse('https://$rawUrl');
+    } else {
+      uri = Uri.parse(rawUrl);
+    }
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (e) {
+    debugPrint('Could not launch link $rawUrl: $e');
+  }
+}
 
 /// A single formatting span applied to a range of text
 class RichSpan {
@@ -326,6 +349,7 @@ class RichNoteController extends TextEditingController {
       subscript: false,
       textColor: globalTextColor,
       bgColor: null,
+      linkUrl: null,
     ));
 
     for (final span in _spans) {
@@ -344,6 +368,32 @@ class RichNoteController extends TextEditingController {
           subscript: span.subscript,
           textColor: span.textColor ?? charFormats[i].textColor,
           bgColor: span.bgColor ?? charFormats[i].bgColor,
+          linkUrl: charFormats[i].linkUrl,
+        );
+      }
+    }
+
+    // Auto-detect email and URL links in fullText
+    final Iterable<RegExpMatch> linkMatches = _linkRegex.allMatches(fullText);
+    for (final match in linkMatches) {
+      final s = match.start.clamp(0, len);
+      final e = match.end.clamp(0, len);
+      final matchedUrl = match.group(0);
+      for (int i = s; i < e; i++) {
+        final existingFmt = charFormats[i];
+        charFormats[i] = _CharFormat(
+          bold: existingFmt.bold,
+          italic: existingFmt.italic,
+          underline: true,
+          strikethrough: existingFmt.strikethrough,
+          highlight: existingFmt.highlight,
+          code: existingFmt.code,
+          quote: existingFmt.quote,
+          superscript: existingFmt.superscript,
+          subscript: existingFmt.subscript,
+          textColor: const Color(0xFF2563EB),
+          bgColor: existingFmt.bgColor,
+          linkUrl: matchedUrl,
         );
       }
     }
@@ -361,9 +411,10 @@ class RichNoteController extends TextEditingController {
       final isCode = fmt.code;
       final isHighlight = fmt.highlight;
       final isQuote = fmt.quote;
+      final isLink = fmt.linkUrl != null;
 
       TextDecoration decoration = TextDecoration.combine([
-        if (fmt.underline) TextDecoration.underline,
+        if (fmt.underline || isLink) TextDecoration.underline,
         if (fmt.strikethrough) TextDecoration.lineThrough,
       ]);
 
@@ -371,7 +422,7 @@ class RichNoteController extends TextEditingController {
         fontWeight: fmt.bold ? FontWeight.bold : (style?.fontWeight ?? FontWeight.normal),
         fontStyle: fmt.italic ? FontStyle.italic : FontStyle.normal,
         decoration: decoration,
-        color: fmt.textColor ?? style?.color,
+        color: isLink ? const Color(0xFF2563EB) : (fmt.textColor ?? style?.color),
         backgroundColor: isHighlight
             ? const Color(0xFFFEF08A)
             : isCode
@@ -385,7 +436,21 @@ class RichNoteController extends TextEditingController {
         letterSpacing: isCode ? 0.5 : style?.letterSpacing,
       );
 
-      inlineSpans.add(TextSpan(text: segText, style: ts));
+      final String? targetUrl = fmt.linkUrl;
+      if (isLink && targetUrl != null) {
+        inlineSpans.add(
+          TextSpan(
+            text: segText,
+            style: ts,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                _launchLinkUrl(targetUrl);
+              },
+          ),
+        );
+      } else {
+        inlineSpans.add(TextSpan(text: segText, style: ts));
+      }
       i = j;
     }
 
@@ -463,6 +528,7 @@ class _CharFormat {
   final bool subscript;
   final Color? textColor;
   final Color? bgColor;
+  final String? linkUrl;
 
   const _CharFormat({
     required this.bold,
@@ -476,6 +542,7 @@ class _CharFormat {
     required this.subscript,
     required this.textColor,
     required this.bgColor,
+    this.linkUrl,
   });
 
   @override
@@ -491,7 +558,8 @@ class _CharFormat {
       superscript == other.superscript &&
       subscript == other.subscript &&
       textColor == other.textColor &&
-      bgColor == other.bgColor;
+      bgColor == other.bgColor &&
+      linkUrl == other.linkUrl;
 
   @override
   int get hashCode => Object.hash(
@@ -506,5 +574,6 @@ class _CharFormat {
         subscript,
         textColor,
         bgColor,
+        linkUrl,
       );
 }

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/app_theme.dart';
-import 'features/splash/presentation/screens/splash_screen.dart';
+import 'features/home/presentation/screens/home_screen.dart';
 import 'core/database/hive_database_service.dart';
 import 'core/services/app_language_service.dart';
 import 'core/services/pro_subscription_service.dart';
@@ -59,7 +59,7 @@ class NoteNestApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.light,
-          home: const SplashScreen(),
+          home: const HomeScreen(),
         );
       },
     );

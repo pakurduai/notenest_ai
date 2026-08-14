@@ -75,7 +75,6 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
   bool _isLiveVoiceCalling = false; // Live Voice Chat state toggle
   final List<Map<String, String>> _aiChatMessages = []; // List of {sender: 'user'|'ai', text: '...'}
   final ScrollController _aiChatScrollController = ScrollController();
-  double _saveButtonScale = 1.0;
 
   // Obvious Note Background Color Themes
   late List<Map<String, dynamic>> _noteBgColors;
@@ -383,16 +382,16 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                         const SizedBox(height: 10.0),
                       ],
 
-                      // Edit Mode Toolbars (Title, Formatting, Colors) — Shown when toolbars are expanded
-                      if (!_isReadOnlyMode && !_hideToolbars) ...[
-                        _buildTitleCard(),
-                        const SizedBox(height: 12.0),
+                      // Selection Toolbar & Formatting Toolbar (Shown when text is selected or toolbars are expanded)
+                      if (_hasTextSelection || (!_isReadOnlyMode && !_hideToolbars)) ...[
+                        if (!_isReadOnlyMode && !_hideToolbars) _buildTitleCard(),
+                        if (!_isReadOnlyMode && !_hideToolbars) const SizedBox(height: 12.0),
 
                         _buildFormattingToolbar(),
                         const SizedBox(height: 12.0),
 
-                        _buildColorAndSecondaryToolbar(),
-                        const SizedBox(height: 10.0),
+                        if (!_isReadOnlyMode && !_hideToolbars) _buildColorAndSecondaryToolbar(),
+                        if (!_isReadOnlyMode && !_hideToolbars) const SizedBox(height: 10.0),
                       ],
 
                       // Main Note Editor Card (Visible in all modes)
@@ -408,8 +407,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                         const SizedBox(height: 16.0),
                       ],
 
-                      // Padding for bottom action bar
-                      SizedBox(height: bottomPadding + 85.0),
+                      // Padding for scrollable content
+                      SizedBox(height: bottomPadding + 20.0),
                     ],
                   ),
                 ),
@@ -418,9 +417,6 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
           ),
         ),
       ),
-
-      // ── 3. Bottom Sticky Action Bar (Delete & Save Note) ──
-      bottomSheet: _buildBottomActionBar(bottomPadding),
     );
   }
 
@@ -576,10 +572,11 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
               onTap: () {
                 AudioHapticService.playButtonSound();
                 _saveNoteToDatabase();
-                _contentFocusNode.requestFocus();
+                _contentFocusNode.unfocus();
+                setState(() => _isReadOnlyMode = true);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Note Saved Successfully! 💾 — Active & ready to type!'),
+                    content: Text('Note Saved! 💾 — View Mode Active & Links Clickable!'),
                     duration: Duration(seconds: 1),
                     backgroundColor: Color(0xFF10B981),
                   ),
@@ -977,6 +974,21 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                   _buildSelectionChip('All', Icons.select_all_rounded, () {
                     ctrl.selectAll();
                     setState(() {});
+                  }),
+                  _buildSelectionChip('Copy', Icons.copy_rounded, () {
+                    final sel = ctrl.selection;
+                    final textToCopy = (sel.isValid && !sel.isCollapsed)
+                        ? sel.textInside(ctrl.text)
+                        : ctrl.text;
+                    Clipboard.setData(ClipboardData(text: textToCopy));
+                    AudioHapticService.playButtonSound();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Copied "${textToCopy.length > 25 ? "${textToCopy.substring(0, 25)}..." : textToCopy}" to clipboard! 📋'),
+                        duration: const Duration(seconds: 1),
+                        backgroundColor: const Color(0xFF7C3AED),
+                      ),
+                    );
                   }),
                   Container(width: 1, height: 16, color: Colors.white30, margin: const EdgeInsets.symmetric(horizontal: 6)),
                   _buildSelectionChip('Clear Fmt', Icons.format_clear_rounded, () {
@@ -2005,33 +2017,37 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        if (_hasTextSelection) {
+        final sel = _contentController.selection;
+        final hasSel = sel.isValid && !sel.isCollapsed;
+        if (!hasSel && _hasTextSelection) {
           _contentController.deselect();
           if (mounted) {
             setState(() => _hasTextSelection = false);
           }
         }
-        if (_isReadOnlyMode) {
-          _switchToEditModeAndFocus();
-        } else {
-          _contentFocusNode.requestFocus();
-        }
       },
       onDoubleTap: () {
         AudioHapticService.playButtonSound();
+        _contentController.selectCurrentWord();
+        final sel = _contentController.selection;
+        if (sel.isValid && !sel.isCollapsed) {
+          final wordToCopy = sel.textInside(_contentController.text).trim();
+          if (wordToCopy.isNotEmpty) {
+            Clipboard.setData(ClipboardData(text: wordToCopy));
+            setState(() => _hasTextSelection = true);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Copied "$wordToCopy" to clipboard! 📋'),
+                duration: const Duration(seconds: 1),
+                backgroundColor: const Color(0xFF7C3AED),
+              ),
+            );
+            return;
+          }
+        }
         setState(() {
           _hideToolbars = !_hideToolbars;
         });
-        _contentFocusNode.requestFocus();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_hideToolbars
-                ? 'Toolbars Collapsed — Extra Canvas Space 📝'
-                : 'Toolbars Expanded 🛠️'),
-            duration: const Duration(seconds: 1),
-            backgroundColor: const Color(0xFF7C3AED),
-          ),
-        );
       },
       child: Container(
         width: double.infinity,
@@ -2241,12 +2257,12 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                 keyboardType: TextInputType.multiline,
                 textAlign: _textAlign,
                 style: _buildNoteTextStyle(),
-                showCursor: true,
+                showCursor: !_isReadOnlyMode,
                 cursorColor: const Color(0xFF7C3AED),
                 cursorWidth: 3.0,
                 cursorRadius: const Radius.circular(2.0),
                 enableInteractiveSelection: true,
-                readOnly: false,
+                readOnly: _isReadOnlyMode,
                 onChanged: (_) {
                   final sel = _contentController.selection;
                   final hasSelection = sel.isValid && !sel.isCollapsed;
@@ -3584,142 +3600,6 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
         ),
       );
     }
-  }
-
-  // ─────────────────────────────────────────────
-  // 8. Sticky Bottom Action Bar (Delete & Save Note)
-  // ─────────────────────────────────────────────
-
-  Widget _buildBottomActionBar(double bottomPadding) {
-    return Container(
-      padding: EdgeInsets.only(
-        top: 12.0,
-        bottom: bottomPadding > 0 ? bottomPadding + 6.0 : 16.0,
-        left: 16.0,
-        right: 16.0,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 18.0,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Delete Button (Soft White Card + Red Trash Icon)
-          Expanded(
-            flex: 4,
-            child: Container(
-              height: 52.0,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF5F5),
-                borderRadius: BorderRadius.circular(18.0),
-                border: Border.all(color: const Color(0xFFFFE5E5), width: 1.0),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    await _notesRepo.deleteNote(_noteId);
-                    if (mounted) Navigator.pop(context);
-                  },
-                  borderRadius: BorderRadius.circular(18.0),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 20.0),
-                      SizedBox(width: 6.0),
-                      Text(
-                        'Delete',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFEF4444),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12.0),
-
-          // Save Note Button (Vibrant Purple Gradient Button with Scale Feedback)
-          Expanded(
-            flex: 7,
-            child: AnimatedScale(
-              scale: _saveButtonScale,
-              duration: const Duration(milliseconds: 120),
-              child: Container(
-                height: 52.0,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18.0),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
-                      blurRadius: 14.0,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTapDown: (_) => setState(() => _saveButtonScale = 0.96),
-                    onTapUp: (_) => setState(() => _saveButtonScale = 1.0),
-                    onTapCancel: () => setState(() => _saveButtonScale = 1.0),
-                    onTap: () {
-                      AudioHapticService.playButtonSound();
-                      if (_isReadOnlyMode) {
-                        _switchToEditModeAndFocus();
-                      } else {
-                        _saveNoteToDatabase();
-                        _contentFocusNode.requestFocus();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Note Saved Successfully! 💾 — Active & ready to type!'),
-                            duration: Duration(seconds: 1),
-                            backgroundColor: Color(0xFF10B981),
-                          ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(18.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(_isReadOnlyMode ? Icons.edit_rounded : Icons.check_rounded, color: Colors.white, size: 21.0),
-                        const SizedBox(width: 6.0),
-                        Text(
-                          _isReadOnlyMode ? 'Edit Note' : 'Save Note',
-                          style: const TextStyle(
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
