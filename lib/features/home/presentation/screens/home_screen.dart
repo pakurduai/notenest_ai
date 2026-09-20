@@ -1298,10 +1298,10 @@ class _HomeScreenState extends State<HomeScreen>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── ColorNote Style "Tap to Create Note" Button ──
-            _buildColorNoteCreateButton(),
+            // 1. "Create Your First Note" Card Widget at Top
+            _buildPureFlutterEmptyState(isCompact: true),
 
-            const SizedBox(height: 14.0),
+            const SizedBox(height: 18.0),
 
             // Pinned Notes (if any)
             if (pinnedNotes.isNotEmpty) ...[
@@ -1778,113 +1778,6 @@ class _HomeScreenState extends State<HomeScreen>
           fontSize: 11.0,
           fontWeight: FontWeight.w700,
           color: fg,
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // ColorNote Style Simple "Create Note" Button
-  // ─────────────────────────────────────────────
-
-  Widget _buildColorNoteCreateButton() {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(color: const Color(0xFFECE9F6), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
-              blurRadius: 10.0,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: InkWell(
-          onTap: () {
-            AudioHapticService.playButtonSound();
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateNoteScreen()),
-            );
-          },
-          borderRadius: BorderRadius.circular(16.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 11.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 38.0,
-                  height: 38.0,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3EDFF),
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: const Icon(Icons.add_rounded, color: Color(0xFF7C3AED), size: 24.0),
-                ),
-                const SizedBox(width: 12.0),
-                const Expanded(
-                  child: Text(
-                    '+ Add Note / Take a note...',
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF6E6A8A),
-                    ),
-                  ),
-                ),
-                // Checklist Quick Action
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10.0),
-                    onTap: () {
-                      AudioHapticService.playButtonSound();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CreateNoteScreen(
-                            existingNote: NoteModel(
-                              id: DateTime.now().millisecondsSinceEpoch.toString(),
-                              title: 'To-Do Checklist',
-                              content: '[ ] Item 1\n[ ] Item 2\n[ ] Item 3\n',
-                              tag: 'Personal',
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(7.0),
-                      child: const Icon(Icons.check_box_outlined, color: Color(0xFF10B981), size: 21.0),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4.0),
-                // AI Note Quick Action
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10.0),
-                    onTap: () {
-                      AudioHapticService.playButtonSound();
-                      _showCreateOptionsBottomSheet(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(7.0),
-                      child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED), size: 20.0),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
