@@ -1298,6 +1298,11 @@ class _HomeScreenState extends State<HomeScreen>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── ColorNote Style "Tap to Create Note" Button ──
+            _buildColorNoteCreateButton(),
+
+            const SizedBox(height: 14.0),
+
             // Pinned Notes (if any)
             if (pinnedNotes.isNotEmpty) ...[
               const Padding(
@@ -1325,7 +1330,7 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(height: 14.0),
             ],
 
-            // All Notes List / Grid (Clean ColorNote style without Recent Notes header)
+            // All Notes (no RECENT NOTES header — clean ColorNote style)
             if (recentNotes.isNotEmpty)
               if (_isGridView)
                 _buildNotesGrid(recentNotes)
@@ -1779,6 +1784,113 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ─────────────────────────────────────────────
+  // ColorNote Style Simple "Create Note" Button
+  // ─────────────────────────────────────────────
+
+  Widget _buildColorNoteCreateButton() {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.0),
+          border: Border.all(color: const Color(0xFFECE9F6), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
+              blurRadius: 10.0,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: InkWell(
+          onTap: () {
+            AudioHapticService.playButtonSound();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateNoteScreen()),
+            );
+          },
+          borderRadius: BorderRadius.circular(16.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 11.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 38.0,
+                  height: 38.0,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3EDFF),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: const Icon(Icons.add_rounded, color: Color(0xFF7C3AED), size: 24.0),
+                ),
+                const SizedBox(width: 12.0),
+                const Expanded(
+                  child: Text(
+                    '+ Add Note / Take a note...',
+                    style: TextStyle(
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6E6A8A),
+                    ),
+                  ),
+                ),
+                // Checklist Quick Action
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10.0),
+                    onTap: () {
+                      AudioHapticService.playButtonSound();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateNoteScreen(
+                            existingNote: NoteModel(
+                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              title: 'To-Do Checklist',
+                              content: '[ ] Item 1\n[ ] Item 2\n[ ] Item 3\n',
+                              tag: 'Personal',
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(7.0),
+                      child: const Icon(Icons.check_box_outlined, color: Color(0xFF10B981), size: 21.0),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4.0),
+                // AI Note Quick Action
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10.0),
+                    onTap: () {
+                      AudioHapticService.playButtonSound();
+                      _showCreateOptionsBottomSheet(context);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(7.0),
+                      child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED), size: 20.0),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
   // Pure Flutter Empty State Illustration Widget
   // ─────────────────────────────────────────────
 
@@ -1791,7 +1903,13 @@ class _HomeScreenState extends State<HomeScreen>
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showColorNoteAddDialog(context),
+        onTap: () {
+          AudioHapticService.playButtonSound();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreateNoteScreen()),
+          );
+        },
         borderRadius: BorderRadius.circular(24.0),
         child: Container(
           width: double.infinity,
@@ -1937,107 +2055,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ColorNote-style Add Dialog (Text, Checklist, Premium)
-  void _showColorNoteAddDialog(BuildContext context) {
-    AudioHapticService.playButtonSound();
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
-          backgroundColor: Colors.white,
-          elevation: 10,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 22.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Add',
-                  style: TextStyle(
-                    fontSize: 22.0,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF150D33),
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3EDFF),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.description_outlined, color: Color(0xFF7C3AED), size: 22),
-                  ),
-                  title: const Text(
-                    'Text',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF150D33)),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateNoteScreen()));
-                  },
-                ),
-                const Divider(height: 12, color: Color(0xFFECE9F6)),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE6F7ED),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.check_box_outlined, color: Color(0xFF10B981), size: 22),
-                  ),
-                  title: const Text(
-                    'Checklist',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF150D33)),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => CreateNoteScreen(
-                      existingNote: NoteModel(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        title: 'Shopping List',
-                        content: '[ ] Milk\n[ ] Eggs\n[ ] Bread\n',
-                        tag: 'Personal',
-                        createdAt: DateTime.now(),
-                        updatedAt: DateTime.now(),
-                      ),
-                    )));
-                  },
-                ),
-                const Divider(height: 12, color: Color(0xFFECE9F6)),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF9E6),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFB800), size: 22),
-                  ),
-                  title: const Text(
-                    'Premium',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF150D33)),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProUpgradeScreen()));
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   // Material Bottom Sheet Options: Text Note, Checklist, Voice Note, Scan Document, AI Note, Premium
   void _showCreateOptionsBottomSheet(BuildContext context) {
