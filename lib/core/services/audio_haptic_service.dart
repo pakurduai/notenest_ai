@@ -24,8 +24,9 @@ class AudioHapticService {
       if (kIsWeb) {
         playWebBellChimeSynth();
       } else {
+        SystemSound.play(SystemSoundType.alert);
         SystemSound.play(SystemSoundType.click);
-        HapticFeedback.mediumImpact();
+        HapticFeedback.heavyImpact();
       }
     } catch (_) {}
   }

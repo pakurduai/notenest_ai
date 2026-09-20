@@ -986,33 +986,58 @@ class _SettingsScreenState extends State<SettingsScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Appearance & Lighting Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33))),
+                    const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Appearance & Lighting Settings',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF150D33)),
+                      ),
+                    ),
                     const SizedBox(height: 14),
                     SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
                       value: AmbientBackgroundGlowWidget.isGlowEnabled,
                       onChanged: (val) {
                         setModalState(() => AmbientBackgroundGlowWidget.isGlowEnabled = val);
                         setState(() {});
                         AudioHapticService.playButtonSound();
                       },
-                      title: const Text('Ambient Background Glow Lights', style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(AmbientBackgroundGlowWidget.isGlowEnabled ? 'ON (Dynamic Gradient Lights)' : 'OFF (Clean Solid Background)'),
+                      title: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text('Ambient Background Glow Lights', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      subtitle: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(AmbientBackgroundGlowWidget.isGlowEnabled ? 'ON (Dynamic Gradient Lights)' : 'OFF (Clean Solid Background)'),
+                      ),
                       activeTrackColor: const Color(0xFF7C3AED),
                     ),
                     SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
                       value: FlashlightService.isFlashlightOn,
                       onChanged: (val) async {
                         await FlashlightService.toggleFlashlight(context);
                         setModalState(() {});
                         setState(() {});
                       },
-                      title: const Text('Reading Flashlight / Torch', style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(FlashlightService.isFlashlightOn ? 'Torch Turned ON 🔦' : 'Torch OFF'),
+                      title: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text('Reading Flashlight / Torch', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      subtitle: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(FlashlightService.isFlashlightOn ? 'Torch Turned ON 🔦' : 'Torch OFF'),
+                      ),
                       activeTrackColor: const Color(0xFF7C3AED),
                     ),
                   ],

@@ -179,10 +179,6 @@ class _SearchScreenState extends State<SearchScreen>
                             const SizedBox(height: 14.0),
                           ],
 
-                          // AI Smart Search Card
-                          _buildAiSmartSearchCard(),
-                          const SizedBox(height: 16.0),
-
                           // Search Results Section (Header + List/Grid View Cards)
                           _buildSearchResultsHeader(),
                           const SizedBox(height: 10.0),
@@ -1341,172 +1337,8 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   // ─────────────────────────────────────────────
-  // 6. AI Smart Search Featured Card
   // ─────────────────────────────────────────────
-
-  Widget _buildAiSmartSearchCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.0),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFF3EDFF), Color(0xFFEBF3FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: const Color(0xFFDDD5FA), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
-            blurRadius: 16.0,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Left Seamless Transparent 3D Robot Mascot Asset
-          Container(
-            width: 42.0,
-            height: 42.0,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF7C3AED).withValues(alpha: 0.22),
-                  blurRadius: 12.0,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Image.asset(
-                'assets/images/energetic_robot_clean.png',
-                width: 36.0,
-                height: 36.0,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Image.asset(
-                  'assets/images/home_robot.png',
-                  width: 36.0,
-                  height: 36.0,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.smart_toy_rounded,
-                    size: 24.0,
-                    color: Color(0xFF7C3AED),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8.0),
-
-          // Content Column
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'AI Smart Search',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF150D33),
-                      ),
-                    ),
-                    SizedBox(width: 3.0),
-                    Icon(Icons.auto_awesome, size: 12.0, color: Color(0xFF7C3AED)),
-                  ],
-                ),
-                SizedBox(height: 2.0),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Try natural language search',
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF6E6A8A),
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '"Show my work notes"',
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontStyle: FontStyle.italic,
-                      color: Color(0xFF8C88A6),
-                    ),
-                  ),
-                ),
-
-
-              ],
-            ),
-          ),
-          const SizedBox(width: 4.0),
-
-          // Try Now Button
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AiAssistantScreen()),
-                );
-              },
-              borderRadius: BorderRadius.circular(16.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.0),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
-                      blurRadius: 8.0,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Try Now',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 2.0),
-                    Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 11.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // 7. Search Results Header & Cards List
+  // 6. Search Results Header & Cards List
   // ─────────────────────────────────────────────
 
   Widget _buildSearchResultsHeader() {
@@ -1515,27 +1347,34 @@ class _SearchScreenState extends State<SearchScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            const Text(
-              'Search Results',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF150D33),
-              ),
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                const Text(
+                  'Search Results',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF150D33),
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+                Text(
+                  '(${realResults.length} found)',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8C88A6),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 6.0),
-            Text(
-              '(${realResults.length} found)',
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF8C88A6),
-              ),
-            ),
-          ],
+          ),
         ),
+        const SizedBox(width: 8.0),
 
         // View Mode Toggle (List vs Grid)
         Row(

@@ -7,6 +7,7 @@ import 'core/database/hive_database_service.dart';
 import 'core/services/app_language_service.dart';
 import 'core/services/pro_subscription_service.dart';
 import 'core/services/play_billing_service.dart';
+import 'core/services/ad_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,10 +21,11 @@ void main() async {
     debugPrint('Hive init exception: $e');
   }
 
-  // Initialize Google Play Billing API service
+  // Initialize Google Play Billing & Mobile Ads API service
   if (!kIsWeb) {
     try {
       await PlayBillingService.init();
+      await AdService.instance.init();
     } catch (_) {}
   }
 

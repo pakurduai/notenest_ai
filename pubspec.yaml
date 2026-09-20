@@ -1,7 +1,7 @@
 name: notenest_ai
 description: "NoteNest - Smart Notes. Smarter Ideas."
 publish_to: 'none'
-version: 1.0.9+10
+version: 1.1.0+17
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -20,6 +20,9 @@ dependencies:
   http: ^1.2.0
   in_app_purchase: ^3.2.0
   url_launcher: ^6.3.2
+  torch_light: ^2.0.0
+  audioplayers: ^6.8.1
+  google_mobile_ads: ^5.2.0
 
 dev_dependencies:
   flutter_test:
