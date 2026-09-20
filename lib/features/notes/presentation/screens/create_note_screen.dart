@@ -10,6 +10,7 @@ import '../../../../core/widgets/custom_color_picker_modal.dart';
 import '../../../../core/controllers/rich_note_controller.dart';
 import '../../domain/models/note_model.dart';
 import '../../data/notes_repository.dart';
+import '../../../../core/services/ad_service.dart';
 
 /// Note Editor Screen — Rebuilt to 100% pixel-to-pixel perfection
 /// matching the official NoteNest AI design reference with ColorNote style Read/Edit modes.
@@ -434,7 +435,11 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
           cardSize: 32.0,
           onTap: () {
             _saveNoteToDatabase();
-            Navigator.pop(context);
+            AdService.instance.showInterstitialAdOnAction(
+              onDismissed: () {
+                if (mounted) Navigator.pop(context);
+              },
+            );
           },
         ),
         const SizedBox(width: 6.0),
@@ -581,6 +586,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
                     backgroundColor: Color(0xFF10B981),
                   ),
                 );
+                AdService.instance.showInterstitialAdOnAction();
               },
             ),
             const SizedBox(width: 2.0),
