@@ -175,21 +175,66 @@ This document stores the complete project state, design system rules, completed 
   - Active AdMob Live App ID and production ad units configured with `AD_ID` permission.
 - **Rollout Scope**: 100% Full Rollout worldwide.
 - **Status**: **Changes in review** by Google Play Console team.
+
+### 20. Android Developer Verification Completed (`✅ 🔐`)
+- **Deadline**: September 30, 2026
+- **Status**: **DONE** — Both apps already registered before deadline.
+- **Registered Package Names**:
+  - `com.notenest.ai` → **NoteNest: Offline Notes** (Registered: Aug 5, 2026) ✅
+  - `com.pakurduai.community` → **Pak Urdu AI** (Registered: Sep 8, 2026) ✅
+- **Keys**: 3 signing keys each
+- **No action needed** — Google Play Console auto-registered both apps when first published.
+
+---
+
+## 📱 Developer Account Overview
+- **Account Name**: Pak Urdu Ai
+- **Account Type**: Personal
+- **Account ID**: `813282462192911293`
+- **Apps on Console**:
+  1. **NoteNest: Offline Notes** (`com.notenest.ai`) — Production, v1.1.0 (17), In Review
+  2. **Pak Urdu AI** (`com.pakurduai.community`) — Closed Testing
+
+---
+
+## 💰 AdMob Monetization Status
+- **Status**: 100% Live & Active in Release Build
+- **AdMob App ID**: `ca-app-pub-9647688316681781~6451972635`
+- **Banner Ad**: `ca-app-pub-9647688316681781/3843110845` — shows on Home Screen bottom
+- **Interstitial Ad**: `ca-app-pub-9647688316681781/5056361417` — shows on note save actions (40s frequency cap)
+- **app-ads.txt**: Live & verified at `https://pakurduai.github.io/notenest_ai/app-ads.txt`
+- **Earnings**: Viewable at `admob.google.com` — payment when balance reaches $100
+
+---
+
+## 🆕 New App Upload Process (Future Reference)
+When uploading a brand new app to Play Store:
+1. **Flutter**: `flutter build appbundle --release` → get `.aab` file
+2. **Play Console**: `Create app` → fill store listing, content rating, privacy policy
+3. **Closed Testing**: Use existing **"NoteNest Testers"** Gmail list (24 emails saved) → wait 14 days
+4. **Production Access**: Automatically granted after testing cycle
+5. **Android Verification**: Register new package name at `Android developer verification` page
+6. **Production Upload**: Upload `.aab` → Submit for review → Live in 1-2 days
+- **Note**: NoteNest itself never needs testers again — direct production upload always!
+
 ---
 
 ## 🚀 Production Deliverables & Verification
 - **Flutter Code Analysis**: `No issues found!` (0 errors, 0 warnings)
 - **Local Web Server**: Active on `http://localhost:8080` (`flutter run -d web-server --web-port 8080`)
 - **Device Verification**: Physical Android device (`TECNO CL6` Android 15 API 35) & Chrome Web.
+- **Release Builds Location**: `release_builds/` folder in project root
+  - `NoteNest-v1.1.0-release.aab` (47.9 MB) — for Play Store
+  - `NoteNest-v1.1.0-release.apk` (100.6 MB) — for direct install/testing
 
 ---
 
 ## 🛠️ How to Resume Next Session
 
-When starting a new conversation tomorrow, simply message Antigravity AI:
+When starting a new conversation, simply message Antigravity AI:
 
 > **"NoteNest project continue karo"**  
 > or  
-> **"Google Play submission guidance perform karo"**
+> **"AGENTS.md padho aur kaam jari rakho"**
 
 Antigravity AI will automatically load this `AGENTS.md` file, maintain 100% project context, and continue seamlessly!
