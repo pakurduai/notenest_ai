@@ -9,7 +9,7 @@ This document stores the complete project state, design system rules, completed 
 - **Play Store Title**: `NoteNest: Offline Notes`
 - **Android Launcher Label**: `NoteNest`
 - **Package ID / Namespace**: `com.notenest.ai`
-- **Version**: `1.0.9` (Build `16`)
+- **Version**: `1.1.0` (Build `17`)
 - **Framework**: Flutter (Dart)
 - **Target Platforms**: Android (Edge-to-Edge API 21-35) & Web (`http://localhost:8080`)
 - **Branding Colors**:
@@ -151,6 +151,18 @@ This document stores the complete project state, design system rules, completed 
 - **Files**: `lib/core/services/ad_service.dart`, `lib/core/widgets/ad_banner_widget.dart`, `lib/features/notes/presentation/screens/create_note_screen.dart`
 - **Verification**: `app-ads.txt` deployed on `https://pakurduai.github.io/notenest_ai/app-ads.txt` and verified.
 - **Analysis**: `flutter analyze` verified `No issues found!`.
+
+### 19. Production Release v1.1.0 (Build 17) Submitted for 100% Worldwide Rollout (`🎉 🚀 🌍`)
+- **Release Track**: Production — Release `17 (1.1.0)`
+- **Bundle File**: `NoteNest-v1.1.0-release.aab` (`47.9 MB`)
+- **APK File**: `NoteNest-v1.1.0-release.apk` (`100.6 MB`)
+- **Key Enhancements**:
+  - Home screen cleaned by removing `RECENT NOTES` header.
+  - Note editor saves cleanly with checkmark (`✓`) disappearing into edit mode.
+  - Clean ColorNote-style create notes UI maintained.
+  - Active AdMob Live App ID and production ad units configured with `AD_ID` permission.
+- **Rollout Scope**: 100% Full Rollout worldwide.
+- **Status**: **Changes in review** by Google Play Console team.
  ---
 
 ## 🚀 Production Deliverables & Verification
