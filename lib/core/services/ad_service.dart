@@ -19,8 +19,7 @@ class AdService {
   static const String testBannerAdUnitIdAndroid = 'ca-app-pub-3940256099942544/6300978111';
 
   /// Official NoteNest Live Interstitial Ad Unit ID
-  /// (Replace with live Interstitial ID once created in AdMob console)
-  static const String liveInterstitialAdUnitIdAndroid = 'ca-app-pub-9647688316681781/1234567890';
+  static const String liveInterstitialAdUnitIdAndroid = 'ca-app-pub-9647688316681781/5056361417';
 
   /// Google Official Test Interstitial Ad Unit ID
   static const String testInterstitialAdUnitIdAndroid = 'ca-app-pub-3940256099942544/1033173712';
