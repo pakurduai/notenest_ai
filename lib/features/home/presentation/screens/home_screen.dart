@@ -12,6 +12,7 @@ import 'package:notenest_ai/core/database/hive_database_service.dart';
 import 'package:notenest_ai/core/services/audio_haptic_service.dart';
 import 'package:notenest_ai/core/services/notification_service.dart';
 import 'package:notenest_ai/core/widgets/ambient_background_glow_widget.dart';
+import 'package:notenest_ai/core/widgets/ad_banner_widget.dart';
 
 /// Pixel-Perfect, Ultra-HD, Material 3 Home Screen for NoteNest AI
 /// Rebuilt 100% using pure Flutter widgets matching the reference UI design.
@@ -136,9 +137,9 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
 
-                // Bottom Spacing for Floating Nav & FAB
+                // Bottom Spacing for Ad Banner, Floating Nav & FAB
                 SliverToBoxAdapter(
-                  child: SizedBox(height: bottomPadding + 85.0),
+                  child: SizedBox(height: bottomPadding + 145.0),
                 ),
               ],
             ),
@@ -150,10 +151,19 @@ class _HomeScreenState extends State<HomeScreen>
       floatingActionButton: _buildFab(),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
-      // ── Floating Bottom Navigation Bar ──
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, bottomPadding + 8.0),
-        child: _buildBottomNavigationBar(),
+      // ── Ad Banner + Floating Bottom Navigation Bar ──
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AdBannerWidget(
+            margin: EdgeInsets.only(bottom: 6.0),
+            showBorder: true,
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, bottomPadding + 8.0),
+            child: _buildBottomNavigationBar(),
+          ),
+        ],
       ),
     );
   }
@@ -1288,12 +1298,7 @@ class _HomeScreenState extends State<HomeScreen>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. "Create Your First Note" Card Widget at Top
-            _buildPureFlutterEmptyState(isCompact: true),
-
-            const SizedBox(height: 18.0),
-
-            // 2. Pinned Notes Header & List/Grid
+            // Pinned Notes (if any)
             if (pinnedNotes.isNotEmpty) ...[
               const Padding(
                 padding: EdgeInsets.only(left: 4.0, bottom: 10.0, top: 4.0),
@@ -1317,28 +1322,15 @@ class _HomeScreenState extends State<HomeScreen>
                 _buildNotesGrid(pinnedNotes)
               else
                 ...pinnedNotes.map((note) => _buildNoteCard(note)),
-              const SizedBox(height: 16.0),
+              const SizedBox(height: 14.0),
             ],
 
-            // 3. Recent Notes Header & List/Grid
-            if (recentNotes.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.only(left: 4.0, bottom: 10.0),
-                child: Text(
-                  'RECENT NOTES',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF8C88A6),
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
+            // All Notes List / Grid (Clean ColorNote style without Recent Notes header)
+            if (recentNotes.isNotEmpty)
               if (_isGridView)
                 _buildNotesGrid(recentNotes)
               else
                 ...recentNotes.map((note) => _buildNoteCard(note)),
-            ],
           ],
         );
       },

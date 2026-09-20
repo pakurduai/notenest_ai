@@ -567,28 +567,48 @@ class _CreateNoteScreenState extends State<CreateNoteScreen>
               },
             ),
             const SizedBox(width: 2.0),
-            // Save Note Check Button
-            _buildIconCard(
-              icon: Icons.check_rounded,
-              iconSize: 15.0,
-              cardSize: 28.0,
-              iconColor: Colors.white,
-              bgColor: const Color(0xFF10B981),
-              onTap: () {
-                AudioHapticService.playButtonSound();
-                _saveNoteToDatabase();
-                _contentFocusNode.unfocus();
-                setState(() => _isReadOnlyMode = true);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Note Saved! 💾 — View Mode Active & Links Clickable!'),
-                    duration: Duration(seconds: 1),
-                    backgroundColor: Color(0xFF10B981),
-                  ),
-                );
-                AdService.instance.showInterstitialAdOnAction();
-              },
-            ),
+            // Save Note Check Button (Disappears when saved/ok, replaced by Edit button)
+            if (!_isReadOnlyMode)
+              _buildIconCard(
+                icon: Icons.check_rounded,
+                iconSize: 15.0,
+                cardSize: 28.0,
+                iconColor: Colors.white,
+                bgColor: const Color(0xFF10B981),
+                onTap: () {
+                  AudioHapticService.playButtonSound();
+                  _saveNoteToDatabase();
+                  _contentFocusNode.unfocus();
+                  setState(() => _isReadOnlyMode = true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Note Saved! 💾 — View Mode Active'),
+                      duration: Duration(seconds: 1),
+                      backgroundColor: Color(0xFF10B981),
+                    ),
+                  );
+                  AdService.instance.showInterstitialAdOnAction();
+                },
+              )
+            else
+              _buildIconCard(
+                icon: Icons.edit_rounded,
+                iconSize: 15.0,
+                cardSize: 28.0,
+                iconColor: const Color(0xFF7C3AED),
+                bgColor: const Color(0xFFF3EDFF),
+                onTap: () {
+                  AudioHapticService.playButtonSound();
+                  setState(() => _isReadOnlyMode = false);
+                  _contentFocusNode.requestFocus();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Edit Mode Active ✏️'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
             const SizedBox(width: 2.0),
             _buildIconCard(
               icon: Icons.more_vert_rounded,
